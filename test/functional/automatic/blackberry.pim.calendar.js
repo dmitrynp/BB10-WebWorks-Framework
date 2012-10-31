@@ -22,7 +22,9 @@ var cal,
     CalendarEventFilter,
     CalendarError,
     CalendarRepeatRule,
-    Attendee;
+    Attendee,
+    calEvent,
+    originalEventId;
 
 // TODO test find by start/end date
 // TODO test find without filter
@@ -88,9 +90,6 @@ beforeEach(function () {
 });
 
 describe("blackberry.pim.calendar", function () {
-    var calEvent,
-        originalEventId;
-
     describe("Object and constants definitions", function () {
         it('blackberry.pim.calendar should exist', function () {
             expect(cal).toBeDefined();
@@ -328,11 +327,28 @@ describe("blackberry.pim.calendar", function () {
         });
     });
 
+    describe("blackberry.pim.calendar.getCalendarAccounts", function () {
+        it('returns at least one account', function () {
+            var accounts = cal.getCalendarAccounts();
+
+            expect(accounts).toBeDefined();
+            expect(accounts.length).toBeGreaterThan(0);
+        });
+    });
+
+    describe("blackberry.pim.calendar.getDefaultCalendarAccount", function () {
+        it('returns the default calendar account', function () {
+            var defaultAccount= cal.getDefaultCalendarAccount();
+
+            expect(defaultAccount).toBeDefined();
+        });
+    });
+
     describe("blackberry.pim.calendar.createEvents / save / remove", function () {
         it('should return a CalendarEvent object', function () {
             var start = new Date("Dec 31, 2012, 12:00"),
                 end = new Date("Jan 01, 2013, 12:00"),
-                summary = "WebWorksTest create event 1",
+                summary = "WebWorksTest create event 1 (wwt01)",
                 location = "Location 1";
 
             calEvent = cal.createEvent({
@@ -364,7 +380,7 @@ describe("blackberry.pim.calendar", function () {
                     expect(created.start.toISOString()).toBe(new Date(Date.parse("Dec 31, 2012, 12:00")).toISOString());
                     expect(created.end.toISOString()).toBe(new Date(Date.parse("Jan 01, 2013, 12:00")).toISOString());
                     expect(created.allDay).toBeTruthy();
-                    expect(created.summary).toBe("WebWorksTest create event 1");
+                    expect(created.summary).toBe("WebWorksTest create event 1 (wwt01)");
                     expect(created.location).toBe("Location 1");
                     calEvent = created;
                     originalEventId = calEvent.id;
@@ -384,31 +400,43 @@ describe("blackberry.pim.calendar", function () {
         });
 
         it('saved event can be found by findEvents', function () {
-            findByEventsByPrefix("WebWorksTest create event 1", function (events) {
+            var called = false;
+
+            findByEventsByPrefix("wwt01", function (events) {
+                called = true;
                 expect(events.length).toBe(1);
-                expect(events[0].id).not.toBe("");
-                expect(events[0].start.toISOString()).toBe(new Date("Dec 31, 2012, 12:00").toISOString());
-                expect(events[0].end.toISOString()).toBe(new Date("Jan 01, 2013, 12:00").toISOString());
-                expect(events[0].allDay).toBeTruthy();
-                expect(events[0].summary).toBe("WebWorksTest create event 1");
-                expect(events[0].location).toBe("Location 1");
+
+                if (events.length === 1) {
+                    expect(events[0].id).not.toBe("");
+                    expect(events[0].start.toISOString()).toBe(new Date("Dec 31, 2012, 12:00").toISOString());
+                    expect(events[0].end.toISOString()).toBe(new Date("Jan 01, 2013, 12:00").toISOString());
+                    expect(events[0].allDay).toBeTruthy();
+                    expect(events[0].summary).toBe("WebWorksTest create event 1");
+                    expect(events[0].location).toBe("Location 1");
+                }
             });
+
+            waitsFor(function () {
+                return called;
+            }, "Find callback not called", 15000);
         });
 
         it('can save event with some fields that contain double quotes', function () {
             var start = new Date("Jan 08, 2013, 11:00"),
                 end = new Date("Jan 08, 2013, 12:00"),
-                summary = "WebWorksTest quotes and multi-line",
+                summary = "WebWorksTest quotes and multi-line (wwt02)",
                 location = "Location 1",
                 description = "This is a multi-line description\n\nWith \"quotes\"! http://www.rim.com\n",
                 called = false,
                 evt,
                 successCb = jasmine.createSpy().andCallFake(function (saved) {
+                    console.log("From quotes success cb");
                     called = true;
                     expect(saved).toBeDefined();
                     expect(saved.description).toEqual(description.replace(/\n/g, "\\n"));
                 }),
                 errorCb = jasmine.createSpy().andCallFake(function (error) {
+                    console.log("From quotes error cb");
                     called = true;
                 });
 
@@ -501,12 +529,13 @@ describe("blackberry.pim.calendar", function () {
 
         it('can edit a saved event', function () {
             var called = false,
-                newSummary = "WebWorksTest create event 1 modified",
+                newSummary = "WebWorksTest create event 1 modified (wwt03)",
                 newLocation = "Location 1 modified",
                 newStart = new Date("Dec 31, 2012, 11:30"),
                 newEnd = new Date("Dec 31, 2012, 11:45"),
                 newAllDay = false,
                 successCb = jasmine.createSpy().andCallFake(function (saved) {
+                    console.log("From edit a saved event success cb");
                     called = true;
                     expect(saved.id).toEqual(originalEventId);
                     expect(saved.summary).toBe(newSummary);
@@ -514,8 +543,10 @@ describe("blackberry.pim.calendar", function () {
                     expect(saved.allDay).toBe(newAllDay);
                     expect(saved.start.toISOString()).toBe(new Date("Dec 31, 2012, 11:30").toISOString());
                     expect(saved.end.toISOString()).toBe(new Date("Dec 31, 2012, 11:45").toISOString());
+                    calEvent = saved;
                 }),
                 errorCb = jasmine.createSpy().andCallFake(function () {
+                    console.log("From edit a saved event error cb");
                     called = true;
                 });
 
@@ -538,24 +569,36 @@ describe("blackberry.pim.calendar", function () {
         });
 
         it('edited event can be found by findEvents', function () {
-            findByEventsByPrefix("WebWorksTest create event 1", function (events) {
+            var called = false;
+
+            findByEventsByPrefix("wwt03", function (events) {
+                called = true;
                 expect(events.length).toBe(1);
-                expect(events[0].id).not.toBe("");
-                expect(events[0].start.toISOString()).toBe(new Date("Dec 31, 2012, 11:30").toISOString());
-                expect(events[0].end.toISOString()).toBe(new Date("Dec 31, 2012, 11:45").toISOString());
-                expect(events[0].allDay).toBeFalsy();
-                expect(events[0].summary).toBe("WebWorksTest create event 1 modified");
-                expect(events[0].location).toBe("Location 1 modified");
+
+                if (events.length === 1) {
+                    expect(events[0].id).not.toBe("");
+                    expect(events[0].start.toISOString()).toBe(new Date("Dec 31, 2012, 11:30").toISOString());
+                    expect(events[0].end.toISOString()).toBe(new Date("Dec 31, 2012, 11:45").toISOString());
+                    expect(events[0].allDay).toBeFalsy();
+                    expect(events[0].summary).toBe("WebWorksTest create event 1 modified (wwt03)");
+                    expect(events[0].location).toBe("Location 1 modified");
+                }
             });
+
+            waitsFor(function () {
+                return called;
+            }, "Find callback not called", 15000);
         });
 
         it('can call remove to remove the event from the device', function () {
             var called = false,
                 successCb = jasmine.createSpy().andCallFake(function () {
+                    console.log("From can call remove to remove the event success callback");
                     called = true;
 
                 }),
                 errorCb = jasmine.createSpy().andCallFake(function () {
+                    console.log("From can call remove to remove the event error callback");
                     called = true;
                 });
 
@@ -572,9 +615,16 @@ describe("blackberry.pim.calendar", function () {
         });
 
         it('removed event cannot be found by findEvents', function () {
-            findByEventsByPrefix("WebWorksTest create event 1", function (events) {
+            var called = false;
+
+            findByEventsByPrefix("wwt03", function (events) {
+                called = true;
                 expect(events.length).toBe(0);
             });
+
+            waitsFor(function () {
+                return called;
+            }, "Find callback not called", 15000);
         });
 
         it('removing an event that has not been saved triggers error callback', function () {
@@ -619,7 +669,7 @@ describe("blackberry.pim.calendar", function () {
                 var start = new Date("Jan 2, 2013, 12:00"),
                     end = new Date("Jan 2, 2013, 12:30"),
                     venue = "some location",
-                    summary = "WebWorksTest event with attendees",
+                    summary = "WebWorksTest event with attendees (wwt04)",
                     attendee1 = new Attendee({
                         "email": "abc@blah.com",
                         "name": "John Doe",
@@ -658,9 +708,10 @@ describe("blackberry.pim.calendar", function () {
                 var start = new Date("Feb 2, 2013, 12:00"),
                     end = new Date("Feb 2, 2013, 12:30"),
                     venue = "some location",
-                    summary = "WebWorksTest event without attendees",
+                    summary = "WebWorksTest event without attendees (wwt05)",
                     called1 = false,
                     called2 = false,
+                    found = false,
                     evt,
                     errorCb = jasmine.createSpy().andCallFake(function () {
                         if (!called1) {
@@ -673,24 +724,11 @@ describe("blackberry.pim.calendar", function () {
                         }
                     }),
                     successCb1 = jasmine.createSpy().andCallFake(function (created) {
-                        called1 = true;
                         evt = created;
+                        called1 = true;
                     }),
                     successCb2 = jasmine.createSpy().andCallFake(function () {
                         called2 = true;
-                        findByEventsByPrefix("WebWorksTest event with 1 attendee added", function (events) {
-                            expect(events.length).toBe(1);
-                            expect(events[0].id).not.toBe("");
-                            expect(events[0].start.toISOString()).toBe(new Date("Feb 2, 2013, 12:00").toISOString());
-                            expect(events[0].end.toISOString()).toBe(new Date("Feb 2, 2013, 12:30").toISOString());
-                            expect(events[0].allDay).toBeFalsy();
-                            expect(events[0].summary).toBe("WebWorksTest event with 1 attendee added");
-                            expect(events[0].location).toBe("some location");
-                            expect(events[0].attendees).toBeDefined();
-                            expect(events[0].attendees.length).toBe(1);
-                            expect(events[0].attendees[0].email).toBe("abc@blah.com");
-                            expect(events[0].attendees[0].name).toBe("John Doe");
-                        });
                     }),
                     attendee = new Attendee({
                         "email": "abc@blah.com",
@@ -707,13 +745,38 @@ describe("blackberry.pim.calendar", function () {
                     return called1;
                 }, "Event not saved", 15000);
 
-                evt.summary = "WebWorksTest event with 1 attendee added";
+                evt.summary = "WebWorksTest event with 1 attendee added (wwt05)";
                 evt.attendees = [attendee];
                 evt.save(successCb2, errorCb);
 
                 waitsFor(function () {
                     return called2;
                 }, "Attendee not added to event", 15000);
+
+                runs(function () {
+                    findByEventsByPrefix("wwt05", function (events) {
+                        expect(events.length).toBe(1);
+
+                        if (events.length === 1) {
+                            expect(events[0].id).not.toBe("");
+                            expect(events[0].start.toISOString()).toBe(new Date("Feb 2, 2013, 12:00").toISOString());
+                            expect(events[0].end.toISOString()).toBe(new Date("Feb 2, 2013, 12:30").toISOString());
+                            expect(events[0].allDay).toBeFalsy();
+                            expect(events[0].summary).toBe("WebWorksTest event with 1 attendee added (wwt05)");
+                            expect(events[0].location).toBe("some location");
+                            expect(events[0].attendees).toBeDefined();
+                            expect(events[0].attendees.length).toBe(1);
+                            expect(events[0].attendees[0].email).toBe("abc@blah.com");
+                            expect(events[0].attendees[0].name).toBe("John Doe");
+                        }
+
+                        found = true;
+                    });
+                });
+
+                waitsFor(function () {
+                    return found;
+                }, "Event not found", 15000);
 
                 runs(function () {
                     expect(successCb1).toHaveBeenCalled();
@@ -729,7 +792,7 @@ describe("blackberry.pim.calendar", function () {
             var start = new Date("Jan 6, 2013, 12:00"),
                 end = new Date("Jan 6, 2013, 12:30"),
                 location = "some location",
-                summary = "WebWorksTest awesome recurring event",
+                summary = "WebWorksTest awesome recurring event (wwt06)",
                 rule = new CalendarRepeatRule({
                     "frequency": CalendarRepeatRule.FREQUENCY_MONTHLY,
                     "expires": new Date("Dec 31, 2013"),
@@ -737,13 +800,8 @@ describe("blackberry.pim.calendar", function () {
                 }),
                 called = false,
                 successCb = jasmine.createSpy().andCallFake(function (created) {
-                    called = true;
-                    expect(created.summary).toBe(summary);
-                    expect(created.location).toBe(location);
-                    expect(created.recurrence).toBeDefined();
-                    expect(created.recurrence.frequency).toBe(CalendarRepeatRule.FREQUENCY_MONTHLY);
-                    expect(created.recurrence.numberOfOccurrences).toBe(4);
                     recEvent = created;
+                    called = true;
                 }),
                 errorCb = jasmine.createSpy(function (error) {
                     called = true;
@@ -759,20 +817,32 @@ describe("blackberry.pim.calendar", function () {
             runs(function () {
                 expect(successCb).toHaveBeenCalled();
                 expect(errorCb).not.toHaveBeenCalled();
+
+                if (recEvent) {
+                    expect(recEvent.summary).toBe(summary);
+                    expect(recEvent.location).toBe(location);
+                    expect(recEvent.recurrence).toBeDefined();
+                    expect(recEvent.recurrence.frequency).toBe(CalendarRepeatRule.FREQUENCY_MONTHLY);
+                    expect(recEvent.recurrence.numberOfOccurrences).toBe(4);
+                }
             });
         });
 
         it('Can find recurring event (with expandRecurring set to false)', function () {
             var called = false,
-                filter = new CalendarEventFilter("WebWorksTest awesome recurring", null, null, null, false),
+                filter = new CalendarEventFilter("wwt06", null, null, null, false),
                 findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL),
                 successCb = jasmine.createSpy().andCallFake(function (events) {
-                    expect(events.length).toBe(1); // only found original event if expand flag is set to false
-                    expect(events[0].summary).toBe(recEvent.summary);
-                    expect(events[0].location).toBe(recEvent.location);
-                    expect(events[0].start.toISOString()).toBe(recEvent.start.toISOString());
-                    expect(events[0].end.toISOString()).toBe(recEvent.end.toISOString());
-                    called = true;
+                        expect(events.length).toBe(1); // only found original event if expand flag is set to false
+
+                        if (events.length === 1) {
+                            expect(events[0].summary).toBe(recEvent.summary);
+                            expect(events[0].location).toBe(recEvent.location);
+                            expect(events[0].start.toISOString()).toBe(recEvent.start.toISOString());
+                            expect(events[0].end.toISOString()).toBe(recEvent.end.toISOString());
+                        }
+
+                        called = true;
                 }),
                 errorCb = jasmine.createSpy().andCallFake(function (error) {
                     called = true;
@@ -792,7 +862,7 @@ describe("blackberry.pim.calendar", function () {
 
         it('Can find recurring event (with expandRecurring set to true)', function () {
             var called = false,
-                filter = new CalendarEventFilter("WebWorksTest awesome recurring", null, null, null, true),
+                filter = new CalendarEventFilter("wwt06", null, null, null, true),
                 findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL),
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     var starts = [];
@@ -833,7 +903,7 @@ describe("blackberry.pim.calendar", function () {
             var start = new Date("Jan 7, 2013, 12:00"),
                 end = new Date("Jan 7, 2013, 12:30"),
                 venue = "some location",
-                summary = "WebWorksTest awesome rec event binding expires",
+                summary = "WebWorksTest awesome rec event binding expires (wt007)",
                 rule = new CalendarRepeatRule({
                     "frequency": CalendarRepeatRule.FREQUENCY_MONTHLY,
                     "expires": new Date("Mar 30, 2013"),
@@ -868,7 +938,7 @@ describe("blackberry.pim.calendar", function () {
 
         it('Expires in CalendarRepeatRule works', function () {
             var called = false,
-                filter = new CalendarEventFilter("WebWorksTest awesome rec event binding expires", null, null, null, true),
+                filter = new CalendarEventFilter("wt007", null, null, null, true),
                 findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL),
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     var starts = [];
@@ -908,7 +978,7 @@ describe("blackberry.pim.calendar", function () {
             var start = new Date("Jan 21, 2013, 12:00"),
                 end = new Date("Jan 21, 2013, 12:30"),
                 venue = "some location",
-                summary = "WebWorksTest every Mon and Wed",
+                summary = "WebWorksTest every Mon and Wed (wt008)",
                 rule = new CalendarRepeatRule({
                     "frequency": CalendarRepeatRule.FREQUENCY_WEEKLY,
                     "expires": new Date("Mar 30, 2013"),
@@ -948,7 +1018,7 @@ describe("blackberry.pim.calendar", function () {
                     called = true;
                 });
 
-            findByEventsByPrefix("WebWorksTest every Mon and Wed", successCb, true);
+            findByEventsByPrefix("wt008", successCb, true);
 
             waitsFor(function () {
                 return called;
@@ -963,7 +1033,7 @@ describe("blackberry.pim.calendar", function () {
             var start = new Date("Feb 1, 2013, 12:00"),
                 end = new Date("Feb 1, 2013, 12:30"),
                 venue = "some location",
-                summary = "WebWorksTest first Fri every month",
+                summary = "WebWorksTest first Fri every month (wt009)",
                 rule = new CalendarRepeatRule({
                     "frequency": CalendarRepeatRule.FREQUENCY_MONTHLY_AT_A_WEEK_DAY,
                     "expires": new Date("Jun 30, 2013"),
@@ -1018,7 +1088,7 @@ describe("blackberry.pim.calendar", function () {
                     called = true;
                 });
 
-            findByEventsByPrefix("WebWorksTest first Fri every month", successCb, true);
+            findByEventsByPrefix("wt009", successCb, true);
 
             waitsFor(function () {
                 return called;
@@ -1033,7 +1103,7 @@ describe("blackberry.pim.calendar", function () {
             var start = new Date("Jul 5, 2013, 12:00"),
                 end = new Date("Jul 5, 2013, 12:30"),
                 venue = "some location",
-                summary = "WebWorksTest 1st Fri of 7th month every year",
+                summary = "WebWorksTest 1st Fri of 7th month every year (wt010)",
                 rule = new CalendarRepeatRule({
                     "frequency": CalendarRepeatRule.FREQUENCY_YEARLY_AT_A_WEEK_DAY_OF_MONTH,
                     "expires": new Date("Jun 30, 2017, 12:00"),
@@ -1089,7 +1159,7 @@ describe("blackberry.pim.calendar", function () {
                     called = true;
                 });
 
-            findByEventsByPrefix("WebWorksTest 1st Fri of 7th month every year", successCb, true);
+            findByEventsByPrefix("wt010", successCb, true);
 
             waitsFor(function () {
                 return called;
@@ -1104,7 +1174,7 @@ describe("blackberry.pim.calendar", function () {
             var start = new Date("Jan 31, 2013, 12:00"),
                 end = new Date("Jan 31, 2013, 12:30"),
                 venue = "some location",
-                summary = "WebWorksTest last day of every month",
+                summary = "WebWorksTest last day of every month (wt011)",
                 rule = new CalendarRepeatRule({
                     "frequency": CalendarRepeatRule.FREQUENCY_MONTHLY,
                     "expires": new Date("Jun 1, 2013, 12:00"),
@@ -1157,7 +1227,7 @@ describe("blackberry.pim.calendar", function () {
                     called = true;
                 });
 
-            findByEventsByPrefix("WebWorksTest last day of every month", successCb, true);
+            findByEventsByPrefix("wt011", successCb, true);
 
             waitsFor(function () {
                 return called;
@@ -1174,7 +1244,7 @@ describe("blackberry.pim.calendar", function () {
             var start = new Date("Jan 21, 2013, 12:00"),
                 end = new Date("Jan 21, 2013, 12:30"),
                 location = "some location",
-                summary = "WebWorksTest test exception event",
+                summary = "WebWorksTest test exception event (wt012)",
                 rule = new CalendarRepeatRule({
                     "frequency": CalendarRepeatRule.FREQUENCY_WEEKLY,
                     "expires": new Date("Feb 18, 2013, 12:00"),
@@ -1191,33 +1261,8 @@ describe("blackberry.pim.calendar", function () {
                     exceptionEvtSavedCalled = true;
                 }),
                 successCb = jasmine.createSpy().andCallFake(function (created) {
-                    called = true;
                     recEvent = created;
-                    findByEventsByPrefix(summary, function (events) {
-                        var starts = [],
-                            exceptionEvt;
-
-                        expect(events.length).toBe(8);
-
-                        events.forEach(function (evt) {
-                            starts.push(evt.start.toISOString());
-                        });
-
-                        expect(starts).toContain(new Date("Jan 22, 2013, 12:00").toISOString());
-                        expect(starts).toContain(new Date("Jan 25, 2013, 12:00").toISOString());
-                        expect(starts).toContain(new Date("Jan 29, 2013, 12:00").toISOString());
-                        expect(starts).toContain(new Date("Feb 1, 2013, 12:00").toISOString());
-                        expect(starts).toContain(new Date("Feb 5, 2013, 12:00").toISOString());
-                        expect(starts).toContain(new Date("Feb 8, 2013, 12:00").toISOString());
-                        expect(starts).toContain(new Date("Feb 12, 2013, 12:00").toISOString());
-                        expect(starts).toContain(new Date("Feb 15, 2013, 12:00").toISOString());
-
-                        exceptionEvt = recEvent.createExceptionEvent(new Date("Feb 15, 2013, 12:00"));
-                        exceptionEvt.start = new Date("Feb 16, 2013, 12:00");
-                        exceptionEvt.end = new Date("Feb 16, 2013, 12:30");
-
-                        exceptionEvt.save(exceptionSavedCb, exceptionErrorCb);
-                    }, true);
+                    called = true;
                 }),
                 errorCb = jasmine.createSpy(function (error) {
                     called = true;
@@ -1233,6 +1278,32 @@ describe("blackberry.pim.calendar", function () {
             runs(function () {
                 expect(successCb).toHaveBeenCalled();
                 expect(errorCb).not.toHaveBeenCalled();
+
+                findByEventsByPrefix("wt012", function (events) {
+                    var starts = [],
+                        exceptionEvt;
+
+                    expect(events.length).toBe(8);
+
+                    events.forEach(function (evt) {
+                        starts.push(evt.start.toISOString());
+                    });
+
+                    expect(starts).toContain(new Date("Jan 22, 2013, 12:00").toISOString());
+                    expect(starts).toContain(new Date("Jan 25, 2013, 12:00").toISOString());
+                    expect(starts).toContain(new Date("Jan 29, 2013, 12:00").toISOString());
+                    expect(starts).toContain(new Date("Feb 1, 2013, 12:00").toISOString());
+                    expect(starts).toContain(new Date("Feb 5, 2013, 12:00").toISOString());
+                    expect(starts).toContain(new Date("Feb 8, 2013, 12:00").toISOString());
+                    expect(starts).toContain(new Date("Feb 12, 2013, 12:00").toISOString());
+                    expect(starts).toContain(new Date("Feb 15, 2013, 12:00").toISOString());
+
+                    exceptionEvt = recEvent.createExceptionEvent(new Date("Feb 15, 2013, 12:00"));
+                    exceptionEvt.start = new Date("Feb 16, 2013, 12:00");
+                    exceptionEvt.end = new Date("Feb 16, 2013, 12:30");
+
+                    exceptionEvt.save(exceptionSavedCb, exceptionErrorCb);
+                }, true);
             });
 
             waitsFor(function () {
@@ -1268,7 +1339,7 @@ describe("blackberry.pim.calendar", function () {
                     called = true;
                 });
 
-            findByEventsByPrefix("WebWorksTest test exception event", successCb, true);
+            findByEventsByPrefix("wt012", successCb, true);
 
             waitsFor(function () {
                 return called;
@@ -1312,13 +1383,13 @@ describe("blackberry.pim.calendar", function () {
             expect(successCb).not.toHaveBeenCalled();
         });
 
-        it('can find event by prefix', function () {
+        it('can find event by substring', function () {
             var called = false,
-                filter = new CalendarEventFilter("WebWorksTest abc", null, null, null, false),
+                filter = new CalendarEventFilter("wt013", null, null, null, false),
                 findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL),
                 start = new Date("Dec 31, 2012, 12:00"),
                 end = new Date("Jan 01, 2013, 12:00"),
-                summary = "WebWorksTest abc",
+                summary = "(wt013) WebWorksTest abc",
                 location = "Home",
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
@@ -1405,7 +1476,7 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        it('Can get all events (max=infinity) if findOptions is constructed by new-ing CalendarFindOptions without any params', function () {
+        xit('Can get all events (max=infinity) if findOptions is constructed by new-ing CalendarFindOptions without any params', function () {
             var called = false,
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
@@ -1430,19 +1501,21 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        it('can sort search results by summary (desc)', function () {
+        xit('can sort search results by summary (desc)', function () {
             var called = false,
-                filter = new CalendarEventFilter("WebWorksTest ab", null, null, null, false),
+                filter = new CalendarEventFilter("wt013", null, null, null, false),
                 findOptions = new CalendarFindOptions(filter, [{"fieldName": CalendarFindOptions.SORT_FIELD_SUMMARY, "desc": true}], CalendarFindOptions.DETAIL_FULL),
                 start = new Date("Dec 31, 2012, 12:00"),
                 end = new Date("Jan 01, 2013, 12:00"),
-                summary = "WebWorksTest ab",
+                summary = "(wt013) WebWorksTest ab",
                 location = "Work",
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
                     expect(events.length).toBe(2);
-                    expect(events[0].summary).toBe("WebWorksTest abc");
-                    expect(events[1].summary).toBe("WebWorksTest ab");
+                    if (events.length === 2) {
+                        expect(events[0].summary).toBe("(wt013) WebWorksTest abc");
+                        expect(events[1].summary).toBe("(wt013) WebWorksTest ab");
+                    }
                 }),
                 errorCb = jasmine.createSpy().andCallFake(function () {
                     called = true;
@@ -1471,18 +1544,18 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        it('can sort search results by start time (asc)', function () {
+        xit('can sort search results by start time (asc)', function () {
             var called = false,
-                filter = new CalendarEventFilter("WebWorksTest ab", null, null, null, false),
+                filter = new CalendarEventFilter("wt013", null, null, null, false),
                 findOptions = new CalendarFindOptions(filter, [{"fieldName": CalendarFindOptions.SORT_FIELD_START, "desc": false}], CalendarFindOptions.DETAIL_FULL),
                 start = new Date("Dec 30, 2012, 12:00"),
                 end = new Date("Dec 31, 2012, 12:00"),
-                summary = "WebWorksTest abcd",
+                summary = "(wt013) WebWorksTest abcd",
                 location = "Work",
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
                     expect(events.length).toBe(3);
-                    expect(events[0].summary).toBe("WebWorksTest abcd");
+                    expect(events[0].summary).toBe("(wt013) WebWorksTest abcd");
                 }),
                 errorCb = jasmine.createSpy().andCallFake(function () {
                     called = true;
@@ -1511,14 +1584,14 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        it('can sort search results by end time (asc)', function () {
+        xit('can sort search results by end time (asc)', function () {
             var called = false,
-                filter = new CalendarEventFilter("WebWorksTest ab", null, null, null, false),
+                filter = new CalendarEventFilter("wt013", null, null, null, false),
                 findOptions = new CalendarFindOptions(filter, [{"fieldName": CalendarFindOptions.SORT_FIELD_END, "desc": false}], CalendarFindOptions.DETAIL_FULL),
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
                     expect(events.length).toBe(3);
-                    expect(events[0].summary).toBe("WebWorksTest abcd");
+                    expect(events[0].summary).toBe("(wt013) WebWorksTest abcd");
                 }),
                 errorCb = jasmine.createSpy().andCallFake(function () {
                     called = true;
@@ -1536,16 +1609,16 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        it('can sort search results by location (asc)', function () {
+        xit('can sort search results by location (asc)', function () {
             var called = false,
-                filter = new CalendarEventFilter("WebWorksTest ab", null, null, null, false),
+                filter = new CalendarEventFilter("wt013", null, null, null, false),
                 findOptions = new CalendarFindOptions(filter, [{"fieldName": CalendarFindOptions.SORT_FIELD_LOCATION, "desc": false}], CalendarFindOptions.DETAIL_FULL),
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
                     // TODO: this fails due to the following PR
                     // PR 218835 - Using location as sort field in CalendarService::events() does not return any results
                     expect(events.length).toBe(3);
-                    expect(events[0].summary).toBe("WebWorksTest abc");
+                    expect(events[0].summary).toBe("(wt013) WebWorksTest abc");
                     expect(events[0].location).toBe("Home");
                 }),
                 errorCb = jasmine.createSpy().andCallFake(function () {
@@ -1564,7 +1637,7 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        it("Signal the end of all find tests", function () {
+        xit("Signal the end of all find tests", function () {
             doneTestingFind = true;
         });
     });

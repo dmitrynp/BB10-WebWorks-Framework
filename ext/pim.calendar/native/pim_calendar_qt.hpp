@@ -18,6 +18,8 @@
 #define PIM_CALENDAR_QT_HPP_
 
 #include <json/value.h>
+#include <bb/pim/account/Account>
+#include <bb/pim/account/AccountService>
 #include <bb/pim/calendar/DataTypes>
 #include <bb/pim/calendar/CalendarService>
 #include <bb/pim/calendar/CalendarEvent>
@@ -33,6 +35,7 @@ class PimCalendar;
 namespace webworks {
 
 namespace bbpim = bb::pim::calendar;
+namespace bbpimAccount = bb::pim::account;
 
 enum PimCalendarError {
     UNKNOWN_ERROR = 0,
@@ -66,6 +69,9 @@ public:
     Json::Value EditCalendarEvent(bbpim::CalendarEvent& contact, const Json::Value& attributeObj);
     static Json::Value GetCalendarFolders();
     static Json::Value GetDefaultCalendarFolder();
+    static Json::Value GetCalendarAccounts();
+    static Json::Value GetDefaultCalendarAccount();
+    Json::Value GetEvent(const Json::Value& args);
 
 private:
     static std::string intToStr(const int val);
@@ -82,6 +88,7 @@ private:
     static QList<QDateTime> setEventFields(bbpim::CalendarEvent& ev, const Json::Value& args, Json::Value& returnObj);
     Json::Value populateEvent(const bbpim::CalendarEvent& event, bool isFind);
     Json::Value getCalendarFolderByFolderKey(bbpim::AccountId accountId, bbpim::FolderId folderId);
+    static Json::Value accountToJson(const bbpimAccount::Account account);
 
     std::map<std::string, bbpim::CalendarFolder> _allFoldersMap;
     std::map<std::string, bbpim::CalendarFolder> _foldersMap;

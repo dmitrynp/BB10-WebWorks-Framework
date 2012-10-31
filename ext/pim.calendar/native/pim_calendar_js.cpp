@@ -83,6 +83,17 @@ std::string PimCalendar::InvokeMethod(const std::string& command)
     } else if (strCommand == "getDefaultCalendarFolder") {
         Json::FastWriter writer;
         return writer.write(webworks::PimCalendarQt::GetDefaultCalendarFolder());
+    } else if (strCommand == "getCalendarAccounts") {
+        Json::FastWriter writer;
+        return writer.write(webworks::PimCalendarQt::GetCalendarAccounts());
+    } else if (strCommand == "getDefaultCalendarAccount") {
+        Json::FastWriter writer;
+        return writer.write(webworks::PimCalendarQt::GetDefaultCalendarAccount());
+    } else if (strCommand == "getEvent") {
+        Json::FastWriter writer;
+        std::string result = writer.write(webworks::PimCalendarQt().GetEvent(*obj));
+        delete obj;
+        return result;
     }
 
     return "";

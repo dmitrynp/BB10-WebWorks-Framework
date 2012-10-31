@@ -26,6 +26,7 @@ var _self = {},
     CalendarEvent = require("./CalendarEvent"),
     CalendarError = require("./CalendarError"),
     CalendarFindOptions = require("./CalendarFindOptions"),
+    CalendarAccount = require("./CalendarAccount"),
     CalendarFolder = require("./CalendarFolder"),
     CalendarRepeatRule = require("./CalendarRepeatRule"),
     CalendarEventFilter = require("./CalendarEventFilter"),
@@ -127,11 +128,27 @@ _self.createEvent = function (properties, folder) {
         }
     }
 
-    args["folder"] = folder;
+    args.folder = folder;
 
     args.id = null;
 
     return new CalendarEvent(args);
+};
+
+_self.getCalendarAccounts = function () {
+    var obj = window.webworks.execSync(_ID, "getCalendarAccounts"),
+        accounts = [];
+    console.log(obj);
+    obj.forEach(function (account) {
+        accounts.push(new CalendarAccount(account));
+    });
+    return accounts;
+};
+
+_self.getDefaultCalendarAccount = function () {
+    var obj = window.webworks.execSync(_ID, "getDefaultCalendarAccount");
+    return new CalendarAccount(obj);
+
 };
 
 _self.getCalendarFolders = function () {
@@ -148,6 +165,15 @@ _self.getCalendarFolders = function () {
 _self.getDefaultCalendarFolder = function () {
     var obj = window.webworks.execSync(_ID, "getDefaultCalendarFolder");
     return new CalendarFolder(obj);
+};
+
+_self.getEvent = function (eventId, folder) {
+    var obj = window.webworks.execSync(_ID, "getEvent", {
+            "eventId": eventId,
+            "folder": folder
+        });
+
+    return new CalendarEvent(obj);
 };
 
 _self.findEvents = function (findOptions, onFindSuccess, onFindError) {

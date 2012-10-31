@@ -216,6 +216,67 @@ Json::Value PimCalendarQt::GetDefaultCalendarFolder()
     return Json::Value();
 }
 
+Json::Value PimCalendarQt::GetCalendarAccounts()
+{
+    Json::Value accountArray;
+    const QList<bbpimAccount::Account>accountList = bbpimAccount::AccountService().accounts(bbpimAccount::Service::Calendars);
+    for (int i = 0; i < accountList.size(); i++) {
+        bbpimAccount::Account account = accountList[i];
+        accountArray.append(accountToJson(account));
+    }
+
+    return accountArray;
+}
+
+Json::Value PimCalendarQt::GetDefaultCalendarAccount()
+{
+    Json::Value jsonDefaultAccount;
+    bbpimAccount::Account defaultAccount = bbpimAccount::AccountService().defaultAccount(bbpimAccount::Service::Calendars);
+    jsonDefaultAccount = accountToJson(defaultAccount);
+    return jsonDefaultAccount;
+}
+
+Json::Value PimCalendarQt::GetEvent(const Json::Value& args)
+{
+    Json::Value returnObj;
+    Json::Value searchResult;
+    bbpim::CalendarService service;
+    bbpim::CalendarEvent event;
+    bbpim::Result::Type result;
+
+    if (args.isMember("eventId") && args.isMember("accountId")) {
+        try {
+            bbpim::AccountId accountId = strToInt(args["accountId"].asString());
+            bbpim::EventId eventId = strToInt(args["eventId"].asString());
+            event = service.event(accountId, eventId, &result);
+            if (result == bbpim::Result::BackEndError) {
+                returnObj["_success"] = false;
+                returnObj["code"] = UNKNOWN_ERROR;
+            } else {
+                Json::Value folders;
+                searchResult.append(populateEvent(event, true));
+                lookupCalendarFolderByFolderKey(event.accountId(), event.folderId());
+                for (std::map<std::string, bbpim::CalendarFolder>::const_iterator j = _foldersMap.begin(); j != _foldersMap.end(); j++) {
+                    std::string key = j->first;
+                    bbpim::CalendarFolder folder = j->second;
+                    folders[key] = getCalendarFolderJson(folder);
+                }
+                returnObj["_success"] = true;
+                returnObj["events"] = searchResult;
+                returnObj["folders"] = folders;
+            }
+        } catch(int e) {
+            returnObj["_success"] = false;
+            returnObj["code"] = INVALID_ARGUMENT_ERROR;
+            return returnObj;
+        }
+    } else {
+        returnObj["_success"] = false;
+        returnObj["code"] = INVALID_ARGUMENT_ERROR;
+    }
+    return returnObj;
+}
+
 Json::Value PimCalendarQt::CreateCalendarEvent(const Json::Value& args)
 {
     Json::Value returnObj;
@@ -502,6 +563,27 @@ int PimCalendarQt::strToInt(const std::string s) {
         throw INVALID_ARGUMENT_ERROR;
     }
     return number;
+}
+
+Json::Value PimCalendarQt::accountToJson(const bbpimAccount::Account account)
+{
+    Json::Value accountJson;
+
+    accountJson["id"] = Json::Value(intToStr(account.id()));
+    accountJson["name"] = Json::Value(account.displayName().toStdString());
+    //accountJson["social"] = Json::Value(account.isSocial());
+    accountJson["enterprise"] = Json::Value(account.isEnterprise());
+
+    Json::Value accountFoldersArray;
+    const QList<bbpim::CalendarFolder> folders = bbpim::CalendarService().folders();
+    for (int i = 0; i < folders.size(); i++)
+    {
+        if ( folders[i].accountId() == account.id() ) {
+            accountFoldersArray.append(getCalendarFolderJson(folders[i]));
+        }
+    }
+    accountJson["folders"] = accountFoldersArray;
+    return accountJson;
 }
 
 bbpim::FolderId PimCalendarQt::intToFolderId(const quint32 id) {

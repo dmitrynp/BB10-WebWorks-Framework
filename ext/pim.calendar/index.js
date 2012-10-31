@@ -95,6 +95,34 @@ module.exports = {
         success();
     },
 
+    getDefaultCalendarAccount: function (success, fail, args) {
+        success(pimCalendar.getDefaultCalendarAccount());
+    },
+
+    getCalendarAccounts: function (success, fail, args) {
+        success(pimCalendar.getCalendarAccounts());
+    },
+
+    getEvent: function (success, fail, args) {
+        var findOptions = {},
+            results,
+            event = {};
+
+        findOptions.eventId = JSON.parse(decodeURIComponent(args.eventId));
+        findOptions.accountId = JSON.parse(decodeURIComponent(args.folder)).accountId;
+
+        results = pimCalendar.getEvent(findOptions);
+
+        if (results._success) {
+            if (results.events) {
+                event = results.events[0];
+                event.folder = results.folders[event.accountId + "-" + event.folderId];
+            }
+            console.log(event);
+            success(event);
+        }
+    },
+
     getCalendarFolders: function (success, fail, args) {
         if (!_utils.hasPermission(config, "access_pimdomain_calendars")) {
             success(null);
@@ -127,9 +155,9 @@ JNEXT.PimCalendar = function ()
         return "";
     };
 
-    self.findSingleEvent = function (args) {
-        JNEXT.invoke(self.m_id, "findSingleEvent " + JSON.stringify(args));
-        return "";
+    self.getEvent = function (args) {
+        var value = JNEXT.invoke(self.m_id, "getEvent " + JSON.stringify(args));
+        return JSON.parse(value);
     };
 
     self.save = function (args) {
@@ -140,6 +168,16 @@ JNEXT.PimCalendar = function ()
     self.remove = function (args) {
         JNEXT.invoke(self.m_id, "remove " + JSON.stringify(args));
         return "";
+    };
+
+    self.getDefaultCalendarAccount = function () {
+        var value = JNEXT.invoke(self.m_id, "getDefaultCalendarAccount");
+        return JSON.parse(value);
+    };
+
+    self.getCalendarAccounts = function () {
+        var value = JNEXT.invoke(self.m_id, "getCalendarAccounts");
+        return JSON.parse(value);
     };
 
     self.getCalendarFolders = function (args) {
