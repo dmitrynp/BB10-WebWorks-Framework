@@ -338,7 +338,7 @@ describe("blackberry.pim.calendar", function () {
 
     describe("blackberry.pim.calendar.getDefaultCalendarAccount", function () {
         it('returns the default calendar account', function () {
-            var defaultAccount= cal.getDefaultCalendarAccount();
+            var defaultAccount = cal.getDefaultCalendarAccount();
 
             expect(defaultAccount).toBeDefined();
         });
@@ -843,7 +843,7 @@ describe("blackberry.pim.calendar", function () {
                         }
 
                         called = true;
-                }),
+                    }),
                 errorCb = jasmine.createSpy().andCallFake(function (error) {
                     called = true;
                 });
