@@ -30,6 +30,8 @@
 #include <map>
 #include <limits>
 
+#include "service_provider.hpp"
+
 class PimCalendar;
 
 namespace webworks {
@@ -62,7 +64,7 @@ public:
     PimCalendarQt();
     ~PimCalendarQt();
     Json::Value Find(const Json::Value& args);
-    Json::Value FindSingleEvent(const Json::Value& args);
+    Json::Value GetEvent(const Json::Value& args);
     Json::Value Save(const Json::Value& args);
     Json::Value CreateCalendarEvent(const Json::Value& args);
     Json::Value DeleteCalendarEvent(const Json::Value& args);
@@ -71,7 +73,6 @@ public:
     static Json::Value GetDefaultCalendarFolder();
     static Json::Value GetCalendarAccounts();
     static Json::Value GetDefaultCalendarAccount();
-    Json::Value GetEvent(const Json::Value& args);
 
 private:
     static std::string intToStr(const int val);
@@ -79,6 +80,7 @@ private:
     static bbpim::FolderId intToFolderId(const quint32 id);
     static QDateTime getDate(const Json::Value& arg);
     static QVariant getFromMap(QMap<QString, QVariant> map, QStringList keys);
+    static std::string getSafeString(const std::string& s);
     static std::string replaceAll(const std::string& s, const std::string& souce = "\"", const std::string& target = "\\\"");
     static std::string getFolderKeyStr(bbpim::AccountId accountId, bbpim::FolderId folderId);
     static bool getSearchParams(bbpim::EventSearchParameters& searchParams, const Json::Value& args);
@@ -86,12 +88,16 @@ private:
     static bool isDefaultCalendarFolder(const bbpim::CalendarFolder& folder);
     static Json::Value getCalendarFolderJson(const bbpim::CalendarFolder& folder, bool skipDefaultCheck = false);
     static QList<QDateTime> setEventFields(bbpim::CalendarEvent& ev, const Json::Value& args, Json::Value& returnObj);
+    static bbpim::CalendarService* getCalendarService();
+    static bbpimAccount::AccountService* getAccountService();
     Json::Value populateEvent(const bbpim::CalendarEvent& event, bool isFind);
     Json::Value getCalendarFolderByFolderKey(bbpim::AccountId accountId, bbpim::FolderId folderId);
     static Json::Value accountToJson(const bbpimAccount::Account account);
 
     std::map<std::string, bbpim::CalendarFolder> _allFoldersMap;
     std::map<std::string, bbpim::CalendarFolder> _foldersMap;
+
+    static ServiceProvider _provider;
 };
 
 } // namespace webworks

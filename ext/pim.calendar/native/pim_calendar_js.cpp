@@ -149,6 +149,7 @@ void* PimCalendar::FindThread(void *args)
     std::string event = writer.write(result);
 
     thread_info->parent->NotifyEvent(thread_info->eventId, event);
+    delete thread_info->jsonObj;
     return NULL;
 }
 
@@ -163,6 +164,7 @@ void* PimCalendar::SaveThread(void *args)
     std::string event = writer.write(result);
 
     thread_info->parent->NotifyEvent(thread_info->eventId, event);
+    delete thread_info->jsonObj;
     return NULL;
 }
 
@@ -177,6 +179,7 @@ void* PimCalendar::RemoveThread(void *args)
     std::string event = writer.write(result);
 
     thread_info->parent->NotifyEvent(thread_info->eventId, event);
+    delete thread_info->jsonObj;
     return NULL;
 }
 
