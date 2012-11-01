@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-var CalendarFindOptions = function (filter, sort, detail, limit) {
-    this.filter = filter || null;
-    this.sort = sort || null;
-    this.detail = detail || 4; // default to "Agenda", includes summary and location
-    this.limit = limit || -1; // -1 for returning all results
+var CalendarFindOptions = function (properties) {
+    this.filter = properties && properties.filter ? properties.filter : null;
+    this.sort = properties && properties.sort ? properties.sort : null;
+    this.detail = properties && properties.detail ? properties.detail : 4; // default to "Agenda", includes summary and location
+    this.limit = properties && properties.limit ? properties.limit : -1; // -1 for returning all results
 };
 
-Object.defineProperty(CalendarFindOptions, "SORT_FIELD_GUID", { "value": 1 });
 Object.defineProperty(CalendarFindOptions, "SORT_FIELD_SUMMARY", { "value": 2 });
 Object.defineProperty(CalendarFindOptions, "SORT_FIELD_LOCATION", { "value": 3 });
 Object.defineProperty(CalendarFindOptions, "SORT_FIELD_START", { "value": 4 });

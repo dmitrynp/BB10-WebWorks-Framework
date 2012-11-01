@@ -736,16 +736,16 @@ bool PimCalendarQt::getSearchParams(bbpim::EventSearchParameters& searchParams, 
         Json::Value filter = options.isMember("filter") ? options["filter"] : Json::Value();
         QDateTime now = QDateTime::currentDateTime();
 
-        // filter - prefix - optional
-        if (filter.isMember("prefix") && filter["prefix"].isString()) {
-            searchParams.setPrefix(QString(filter["prefix"].asCString()));
+        // filter - substring - optional
+        if (filter.isMember("substring") && filter["substring"].isString()) {
+            searchParams.setPrefix(QString(filter["substring"].asCString()));
         }
 
-        // detail - mandatory
+        // detail - optional - defaults to Agenda if not set
         if (options.isMember("detail") && options["detail"].isInt()) {
             searchParams.setDetails((bbpim::DetailLevel::Type) options["detail"].asInt());
         } else {
-            return false;
+            searchParams.setDetails(bbpim::DetailLevel::Agenda);
         }
 
         // filter - start - optional

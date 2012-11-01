@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-var CalenderEventFilter = function (prefix, folders, start, end, expandRecurring, eventId) {
-    this.prefix = prefix || "";
-    this.folders = folders || null;
-    this.start = start || null;
-    this.end = end || null;
-    this.expandRecurring = expandRecurring || false;
-    this.eventId = eventId || null;
+var CalenderEventFilter = function (properties) {
+    this.substring = properties && properties.substring ? properties.substring : "";
+    this.folders = properties && properties.folders ? properties.folders : null;
+    this.start = properties && properties.start ? properties.start : null;
+    this.end = properties && properties.end ? properties.end : null;
+    this.expandRecurring = properties && properties.expandRecurring ? properties.expandRecurring : false;
 };
 
 module.exports = CalenderEventFilter;

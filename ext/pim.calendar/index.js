@@ -18,6 +18,7 @@ var pimCalendar,
     _event = require("../../lib/event"),
     _utils = require("../../lib/utils"),
     config = require("../../lib/config"),
+    calendarUtils = require("./calendarUtils"),
     CalendarError = require("./CalendarError");
 
 function checkPermission(success, eventId) {
@@ -37,28 +38,32 @@ function checkPermission(success, eventId) {
 
 module.exports = {
     find: function (success, fail, args) {
-        var findOptions = {},
-            key,
-            filter;
+        var parsedArgs = {},
+            key;
 
         for (key in args) {
             if (args.hasOwnProperty(key)) {
-                findOptions[key] = JSON.parse(decodeURIComponent(args[key]));
+                parsedArgs[key] = JSON.parse(decodeURIComponent(args[key]));
             }
         }
 
-        if (!checkPermission(success, findOptions._eventId)) {
+        if (!checkPermission(success, parsedArgs._eventId)) {
             return;
         }
 
-        filter = findOptions.options.filter;
-        // is searching by eventId and accountId
-        if (filter && filter.eventId && filter.folders.length === 1) {
-            findOptions.options = {eventId: filter.eventId, accountId: filter.folders[0].accountId.toString()};
-            pimCalendar.findSingleEvent(findOptions);
-        } else {
-            pimCalendar.find(findOptions);
+        if (!calendarUtils.validateFindArguments(parsedArgs.options)) {
+            _event.trigger(parsedArgs._eventId, {
+                "result": escape(JSON.stringify({
+                    "_success": false,
+                    "code": CalendarError.INVALID_ARGUMENT_ERROR
+                }))
+            });
+            success();
+            return;
         }
+
+        pimCalendar.find(parsedArgs);
+
         success();
     },
 

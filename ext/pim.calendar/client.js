@@ -33,80 +33,10 @@ var _self = {},
     Attendee = require("./Attendee"),
     calendarUtils = require("./calendarUtils");
 
-function validateFindArguments(findOptions, onFindSuccess, onFindError) {
-    var error = false;
-
-    if (!onFindSuccess || typeof onFindSuccess !== "function" || !findOptions || typeof findOptions.limit !== "number") {
-        error = true;
-    } else {
-        switch (findOptions.detail) {
-        case CalendarFindOptions.DETAIL_MONTHLY:
-        case CalendarFindOptions.DETAIL_WEEKLY:
-        case CalendarFindOptions.DETAIL_FULL:
-        case CalendarFindOptions.DETAIL_AGENDA:
-            break;
-        default:
-            error = true;
-        }
-
-        if (!error && findOptions.sort && findOptions.sort.forEach) {
-            findOptions.sort.forEach(function (s) {
-                switch (s.fieldName) {
-                case CalendarFindOptions.SORT_FIELD_GUID:
-                case CalendarFindOptions.SORT_FIELD_SUMMARY:
-                case CalendarFindOptions.SORT_FIELD_LOCATION:
-                case CalendarFindOptions.SORT_FIELD_START:
-                case CalendarFindOptions.SORT_FIELD_END:
-                    break;
-                default:
-                    error = true;
-                }
-
-                if (s.desc === undefined || typeof s.desc !== "boolean") {
-                    error = true;
-                }
-            });
-        }
-
-        // filter is optional
-        if (!error && findOptions.filter) {
-            error = error ? error : findOptions.filter.start && !calendarUtils.isDate(findOptions.filter.start);
-            error = error ? error : findOptions.filter.end && !calendarUtils.isDate(findOptions.filter.end);
-            error = error ? error : typeof findOptions.filter.prefix !== "string";
-
-            if (!error && findOptions.filter.start && findOptions.filter.end) {
-                error = !calendarUtils.isBeforeOrEqual(findOptions.filter.start, findOptions.filter.end);
-            }
-
-            if (!error && findOptions.filter.start) {
-                findOptions.filter.start = calendarUtils.preprocessDate(findOptions.filter.start);
-            }
-
-            if (!error && findOptions.filter.end) {
-                findOptions.filter.end = calendarUtils.preprocessDate(findOptions.filter.end);
-            }
-
-            if (!error && findOptions.filter.folders) {
-                findOptions.filter.folders.forEach(function (folder) {
-                    if (!folder || !folder.id || isNaN(parseInt(folder.id, 10)) || !folder.accountId || isNaN(folder.accountId, 10)) {
-                        error = true;
-                    }
-                });
-            }
-        }
-    }
-
-    if (error) {
-        calendarUtils.invokeErrorCallback(onFindError, CalendarError.INVALID_ARGUMENT_ERROR);
-    }
-
-    return !error;
-}
-
 function getFolderKeyList(folders) {
     var folderKeys = [];
 
-    if (folders && folders.forEach) {
+    if (folders && Array.isArray(folders)) {
         folders.forEach(function (folder) {
             folderKeys.push({
                 "id": parseInt(folder.id, 10),
@@ -138,10 +68,11 @@ _self.createEvent = function (properties, folder) {
 _self.getCalendarAccounts = function () {
     var obj = window.webworks.execSync(_ID, "getCalendarAccounts"),
         accounts = [];
-    console.log(obj);
+
     obj.forEach(function (account) {
         accounts.push(new CalendarAccount(account));
     });
+
     return accounts;
 };
 
@@ -180,19 +111,36 @@ _self.findEvents = function (findOptions, onFindSuccess, onFindError) {
     var callback,
         eventId;
 
-    if (!validateFindArguments(findOptions, onFindSuccess, onFindError)) {
+    if (!onFindSuccess || typeof onFindSuccess !== "function") {
+        calendarUtils.invokeErrorCallback(onFindError, CalendarError.INVALID_ARGUMENT_ERROR);
         return;
     }
 
-    if (findOptions.filter) {
+    if (!calendarUtils.validateFindArguments(findOptions)) {
+        calendarUtils.invokeErrorCallback(onFindError, CalendarError.INVALID_ARGUMENT_ERROR);
+        return;
+    }
+
+    if (findOptions && findOptions.filter) {
         findOptions.filter.folders = getFolderKeyList(findOptions.filter.folders);
     }
 
     callback = function (args) {
-        console.log(unescape(args.result));
-        var result = JSON.parse(unescape(args.result)),
-            events = result.events,
+        var result,
+            events,
+            tmp,
             realEvents = [];
+
+        try {
+            tmp = unescape(args.result);
+            result = JSON.parse(tmp);
+            events = result.events;
+        } catch (e) {
+            result = {
+                "_success": false,
+                "code": CalendarError.UNKNOWN_ERROR
+            };
+        }
 
         if (result._success) {
             if (events) {

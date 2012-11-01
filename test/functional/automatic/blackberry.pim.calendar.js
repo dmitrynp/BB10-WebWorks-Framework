@@ -38,8 +38,14 @@ function testReadOnly(object, property) {
 }
 
 function findByEventsByPrefix(prefix, onFound, expandRecurring) {
-    var filter = new CalendarEventFilter(prefix, null, null, null, !!expandRecurring),
-        findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL);
+    var filter = {
+            "substring": prefix,
+            "expandRecurring": !!expandRecurring
+        },
+        findOptions = {
+            "filter": filter,
+            "detail": CalendarFindOptions.DETAIL_FULL
+        };
 
     cal.findEvents(
         findOptions,
@@ -106,7 +112,6 @@ describe("blackberry.pim.calendar", function () {
         });
 
         it('blackberry.pim.calendar.CalendarFindOptions constants should exist', function () {
-            expect(CalendarFindOptions.SORT_FIELD_GUID).toBeDefined();
             expect(CalendarFindOptions.SORT_FIELD_SUMMARY).toBeDefined();
             expect(CalendarFindOptions.SORT_FIELD_LOCATION).toBeDefined();
             expect(CalendarFindOptions.SORT_FIELD_START).toBeDefined();
@@ -118,7 +123,6 @@ describe("blackberry.pim.calendar", function () {
         });
 
         it('blackberry.pim.calendar.CalendarFindOptions constants should be read-only', function () {
-            testReadOnly(CalendarFindOptions, "SORT_FIELD_GUID");
             testReadOnly(CalendarFindOptions, "SORT_FIELD_SUMMARY");
             testReadOnly(CalendarFindOptions, "SORT_FIELD_LOCATION");
             testReadOnly(CalendarFindOptions, "SORT_FIELD_START");
@@ -240,10 +244,15 @@ describe("blackberry.pim.calendar", function () {
         it('Can create blackberry.pim.calendar.CalendarEventFilter object', function () {
             var start = new Date(),
                 end = new Date(),
-                filter = new CalendarEventFilter("abc", null, start, end, true);
+                filter = new CalendarEventFilter({
+                    "substring": "abc",
+                    "start": start,
+                    "end": end,
+                    "expandRecurring": true
+                });
 
             expect(filter).toBeDefined();
-            expect(filter.prefix).toBe("abc");
+            expect(filter.substring).toBe("abc");
             expect(filter.folders).toBe(null);
             expect(filter.start).toBe(start);
             expect(filter.end).toBe(end);
@@ -251,17 +260,27 @@ describe("blackberry.pim.calendar", function () {
         });
 
         it('Can create blackberry.pim.calendar.CalendarFindOptions object', function () {
-            var filter = new CalendarEventFilter("abc", null, new Date(), new Date(), true),
+            var filter = new CalendarEventFilter({
+                    "substring": "abc",
+                    "start": new Date(),
+                    "end": new Date(),
+                    "expandRecurring": true
+                }),
                 sort = [{
                     "fieldName": CalendarFindOptions.SORT_FIELD_START,
                     "desc": false
                 }],
                 detail = CalendarFindOptions.DETAIL_FULL,
                 limit = 5,
-                options = new CalendarFindOptions(filter, sort, detail, limit);
+                options = new CalendarFindOptions({
+                    "filter": filter,
+                    "sort": sort,
+                    "detail": detail,
+                    "limit": limit
+                });
 
             expect(options).toBeDefined();
-            expect(options.filter.prefix).toBe("abc");
+            expect(options.filter.substring).toBe("abc");
             expect(options.filter.folders).toBe(null);
             expect(options.filter.expandRecurring).toBe(true);
             expect(options.sort.length).toBe(1);
@@ -830,8 +849,13 @@ describe("blackberry.pim.calendar", function () {
 
         it('Can find recurring event (with expandRecurring set to false)', function () {
             var called = false,
-                filter = new CalendarEventFilter("wwt06", null, null, null, false),
-                findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL),
+                findOptions = {
+                    "filter": {
+                        "substring": "wwt06",
+                        "expandRecurring": false
+                    },
+                    "detail": CalendarFindOptions.DETAIL_FULL
+                },
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                         expect(events.length).toBe(1); // only found original event if expand flag is set to false
 
@@ -862,8 +886,13 @@ describe("blackberry.pim.calendar", function () {
 
         it('Can find recurring event (with expandRecurring set to true)', function () {
             var called = false,
-                filter = new CalendarEventFilter("wwt06", null, null, null, true),
-                findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL),
+                findOptions = {
+                    "filter": {
+                        "substring": "wwt06",
+                        "expandRecurring": true
+                    },
+                    "detail": CalendarFindOptions.DETAIL_FULL
+                },
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     var starts = [];
 
@@ -938,8 +967,13 @@ describe("blackberry.pim.calendar", function () {
 
         it('Expires in CalendarRepeatRule works', function () {
             var called = false,
-                filter = new CalendarEventFilter("wt007", null, null, null, true),
-                findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL),
+                findOptions = {
+                    "filter": {
+                        "substring": "wt007",
+                        "expandRecurring": true
+                    },
+                    "detail": CalendarFindOptions.DETAIL_FULL
+                },
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     var starts = [];
 
@@ -1361,21 +1395,17 @@ describe("blackberry.pim.calendar", function () {
             }
         });
 
-        it('invoke error callback with invalid arguments error if find options is not specified', function () {
-            var successCb = jasmine.createSpy(),
-                errorCb = jasmine.createSpy();
-
-            cal.findEvents(null, successCb, errorCb);
-
-            expect(errorCb).toHaveBeenCalledWith(new CalendarError(CalendarError.INVALID_ARGUMENT_ERROR));
-            expect(successCb).not.toHaveBeenCalled();
-        });
-
         it('invoke error callback with invalid arguments error if find options has invalid detail level', function () {
             var successCb = jasmine.createSpy(),
                 errorCb = jasmine.createSpy(),
-                filter = new CalendarEventFilter("abc", null, null, null, false),
-                findOptions = new CalendarFindOptions(filter, null, -890, 5);
+                filter = {
+                    "substring": "abc"
+                },
+                findOptions = {
+                    "filter": filter,
+                    "detail": -890,
+                    "limit": 5
+                };
 
             cal.findEvents(findOptions, successCb, errorCb);
 
@@ -1383,10 +1413,38 @@ describe("blackberry.pim.calendar", function () {
             expect(successCb).not.toHaveBeenCalled();
         });
 
+        it('can still find events even if find options is null', function () {
+            var called = false,
+                successCb = jasmine.createSpy().andCallFake(function (events) {
+                    called = true;
+                    expect(events.length).toBeGreaterThan(0);
+                }),
+                errorCb = jasmine.createSpy().andCallFake(function (error) {
+                    called = true;
+                });
+
+            cal.findEvents(null, successCb, errorCb);
+
+            waitsFor(function () {
+                return called;
+            }, "Find callback not invoked", 15000);
+
+            runs(function () {
+                expect(successCb).toHaveBeenCalled();
+                expect(errorCb).not.toHaveBeenCalled();
+            });
+        });
+
         it('can find event by substring', function () {
             var called = false,
-                filter = new CalendarEventFilter("wt013", null, null, null, false),
-                findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL),
+                filter = {
+                    "substring": "wt013",
+                    "expandRecurring": false
+                },
+                findOptions = {
+                    "filter": filter,
+                    "detail": CalendarFindOptions.DETAIL_FULL
+                },
                 start = new Date("Dec 31, 2012, 12:00"),
                 end = new Date("Jan 01, 2013, 12:00"),
                 summary = "(wt013) WebWorksTest abc",
@@ -1425,7 +1483,7 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        it('Can get all events (max=findOptions.limit) if filter is constructed by new-ing CalendarEventFilter without any params', function () {
+        it('Can get all events (max=findOptions.limit) if filter is a blank object without any params', function () {
             var called = false,
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
@@ -1436,8 +1494,12 @@ describe("blackberry.pim.calendar", function () {
                 errorCb = jasmine.createSpy().andCallFake(function (error) {
                     called = true;
                 }),
-                filter = new CalendarEventFilter(),
-                findOptions = new CalendarFindOptions(filter, null, CalendarFindOptions.DETAIL_FULL, 5);
+                filter = {},
+                findOptions = {
+                    "filter": filter,
+                    "detail": CalendarFindOptions.DETAIL_FULL,
+                    "limit": 5
+                };
 
             cal.findEvents(findOptions, successCb, errorCb);
 
@@ -1451,7 +1513,7 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        it('Can get all events (max=findOptions.limit) if filter is null in CalendarFindOptions', function () {
+        it('Can get all events (max=findOptions.limit) if filter is not defined in CalendarFindOptions', function () {
             var called = false,
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
@@ -1462,7 +1524,10 @@ describe("blackberry.pim.calendar", function () {
                 errorCb = jasmine.createSpy().andCallFake(function (error) {
                     called = true;
                 }),
-                findOptions = new CalendarFindOptions(null, null, CalendarFindOptions.DETAIL_FULL, 5);
+                findOptions = {
+                    "detail": CalendarFindOptions.DETAIL_FULL,
+                    "limit": 5
+                };
 
             cal.findEvents(findOptions, successCb, errorCb);
 
@@ -1476,7 +1541,7 @@ describe("blackberry.pim.calendar", function () {
             });
         });
 
-        xit('Can get all events (max=infinity) if findOptions is constructed by new-ing CalendarFindOptions without any params', function () {
+        xit('Can get all events (max=infinity) if findOptions is a blank object without any params', function () {
             var called = false,
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
@@ -1487,7 +1552,7 @@ describe("blackberry.pim.calendar", function () {
                 errorCb = jasmine.createSpy().andCallFake(function (error) {
                     called = true;
                 }),
-                findOptions = new CalendarFindOptions();
+                findOptions = {};
 
             cal.findEvents(findOptions, successCb, errorCb);
 
@@ -1503,8 +1568,15 @@ describe("blackberry.pim.calendar", function () {
 
         xit('can sort search results by summary (desc)', function () {
             var called = false,
-                filter = new CalendarEventFilter("wt013", null, null, null, false),
-                findOptions = new CalendarFindOptions(filter, [{"fieldName": CalendarFindOptions.SORT_FIELD_SUMMARY, "desc": true}], CalendarFindOptions.DETAIL_FULL),
+                filter = {
+                    "substring": "wt013",
+                    "expandRecurring": false
+                },
+                findOptions = {
+                    "filter": filter,
+                    "sort": [{"fieldName": CalendarFindOptions.SORT_FIELD_SUMMARY, "desc": true}],
+                    "detail": CalendarFindOptions.DETAIL_FULL
+                },
                 start = new Date("Dec 31, 2012, 12:00"),
                 end = new Date("Jan 01, 2013, 12:00"),
                 summary = "(wt013) WebWorksTest ab",
@@ -1546,8 +1618,15 @@ describe("blackberry.pim.calendar", function () {
 
         xit('can sort search results by start time (asc)', function () {
             var called = false,
-                filter = new CalendarEventFilter("wt013", null, null, null, false),
-                findOptions = new CalendarFindOptions(filter, [{"fieldName": CalendarFindOptions.SORT_FIELD_START, "desc": false}], CalendarFindOptions.DETAIL_FULL),
+                filter = {
+                    "substring": "wt013",
+                    "expandRecurring": false
+                },
+                findOptions = {
+                    "filter": filter,
+                    "sort": [{"fieldName": CalendarFindOptions.SORT_FIELD_START, "desc": false}],
+                    "detail": CalendarFindOptions.DETAIL_FULL
+                },
                 start = new Date("Dec 30, 2012, 12:00"),
                 end = new Date("Dec 31, 2012, 12:00"),
                 summary = "(wt013) WebWorksTest abcd",
@@ -1586,8 +1665,15 @@ describe("blackberry.pim.calendar", function () {
 
         xit('can sort search results by end time (asc)', function () {
             var called = false,
-                filter = new CalendarEventFilter("wt013", null, null, null, false),
-                findOptions = new CalendarFindOptions(filter, [{"fieldName": CalendarFindOptions.SORT_FIELD_END, "desc": false}], CalendarFindOptions.DETAIL_FULL),
+                filter = {
+                    "substring": "wt013",
+                    "expandRecurring": false
+                },
+                findOptions = {
+                    "filter": filter,
+                    "sort": [{"fieldName": CalendarFindOptions.SORT_FIELD_END, "desc": false}],
+                    "detail": CalendarFindOptions.DETAIL_FULL
+                },
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
                     expect(events.length).toBe(3);
@@ -1611,8 +1697,15 @@ describe("blackberry.pim.calendar", function () {
 
         xit('can sort search results by location (asc)', function () {
             var called = false,
-                filter = new CalendarEventFilter("wt013", null, null, null, false),
-                findOptions = new CalendarFindOptions(filter, [{"fieldName": CalendarFindOptions.SORT_FIELD_LOCATION, "desc": false}], CalendarFindOptions.DETAIL_FULL),
+                filter = {
+                    "substring": "wt013",
+                    "expandRecurring": false
+                },
+                findOptions = {
+                    "filter": filter,
+                    "sort": [{"fieldName": CalendarFindOptions.SORT_FIELD_LOCATION, "desc": false}],
+                    "detail": CalendarFindOptions.DETAIL_FULL
+                },
                 successCb = jasmine.createSpy().andCallFake(function (events) {
                     called = true;
                     // TODO: this fails due to the following PR

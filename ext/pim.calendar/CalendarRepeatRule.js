@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-var CalendarRepeatRule,
-    _ID = require("./manifest.json").namespace; // normally 2nd-level require does not work in client side, but manifest has already been required in client.js, so this is ok
 
 /**
  * Contains information about how a calendar event repeats.
  * @constructor
  * @param properties
  */
-CalendarRepeatRule = function (properties) {
+var CalendarRepeatRule = function (properties) {
     var key;
 
     this.frequency = properties && properties.frequency ? properties.frequency : null;
