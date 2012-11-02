@@ -79,7 +79,6 @@ _self.getCalendarAccounts = function () {
 _self.getDefaultCalendarAccount = function () {
     var obj = window.webworks.execSync(_ID, "getDefaultCalendarAccount");
     return new CalendarAccount(obj);
-
 };
 
 _self.getCalendarFolders = function () {
@@ -149,7 +148,6 @@ _self.findEvents = function (findOptions, onFindSuccess, onFindError) {
                     realEvents.push(new CalendarEvent(calendarUtils.populateEvent(event)));
                 });
             }
-            console.log(events);
             onFindSuccess(realEvents);
         } else {
             calendarUtils.invokeErrorCallback(onFindError, result.code);
