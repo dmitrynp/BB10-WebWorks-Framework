@@ -14,12 +14,12 @@ SRCS+=pim_calendar_qt.cpp \
       timezone_utils.cpp \
       service_provider.cpp \
       account_folder_mgr.cpp \
-	  thread_sync.cpp
+      thread_sync.cpp
 
 ifeq ($(UNITTEST),yes)
-NAME=test
-SRCS+=test_main.cpp
-LIBS+=img
+#NAME=test
+#SRCS+=test_main.cpp
+#LIBS+=img
 USEFILE=
 endif
 
