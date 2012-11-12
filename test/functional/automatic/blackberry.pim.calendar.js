@@ -836,55 +836,55 @@ describe("blackberry.pim.calendar", function () {
                     end = new Date("Feb 2, 2013, 12:30"),
                     venue = "some location",
                     summary = "WebWorksTest event without attendees (wwt005)",
-                    called1 = false,
-                    called2 = false,
+                    called = false,
                     found = false,
                     evt,
-                    errorCb = jasmine.createSpy("Error").andCallFake(function () {
-                        if (!called1) {
-                            console.log("From error callback called1");
-                            called1 = true;
-                            return;
-                        }
-
-                        if (!called2) {
-                            console.log("From error callback called2");
-                            called2 = true;
-                        }
+                    saveErrorCb1 = jasmine.createSpy("Save error callback 1").andCallFake(function (error) {
+                        called = true;
                     }),
-                    successCb1 = jasmine.createSpy("Success callback 1").andCallFake(function (created) {
-                        evt = created;
-                        called1 = true;
+                    saveErrorCb2 = jasmine.createSpy("Save error callback 2").andCallFake(function (error) {
+                        called = true;
+                    }),
+                    successCb1 = jasmine.createSpy("Success callback 1").andCallFake(function (saved) {
+                        evt = saved;
+                        called = true;
                     }),
                     successCb2 = jasmine.createSpy("Success callback 2").andCallFake(function () {
-                        called2 = true;
+                        called = true;
                     }),
                     attendee = new Attendee({
-                        "email": "rtse@rim.com",
-                        "name": "Rosa Tse",
+                        "email": "abc@blah.com",
+                        "name": "John Doe",
                         "owner": true,
                         "role": Attendee.ROLE_CHAIR,
                         "type": Attendee.TYPE_HOST
                     });
 
                 evt = cal.createEvent({"summary": summary, "location": venue, "start": start, "end": end});
-                evt.save(successCb1, errorCb);
+                evt.save(successCb1, saveErrorCb1);
 
                 waitsFor(function () {
-                    return called1;
+                    return called;
                 }, "Event not saved", timeout);
 
                 runs(function () {
+                    expect(successCb1).toHaveBeenCalled();
+                    expect(saveErrorCb1).not.toHaveBeenCalled();
+
+                    called = false;
                     evt.summary = "WebWorksTest event with 1 attendee added (wwt005)";
                     evt.attendees = [attendee];
-                    evt.save(successCb2, errorCb);
+                    evt.save(successCb2, saveErrorCb2);
                 });
 
                 waitsFor(function () {
-                    return called2;
+                    return called;
                 }, "Attendee not added to event", timeout);
 
                 runs(function () {
+                    expect(successCb2).toHaveBeenCalled();
+                    expect(saveErrorCb2).not.toHaveBeenCalled();
+
                     findByEventsByPrefix("wwt005", function (events) {
                         expect(events.length).toBe(1);
 
@@ -914,12 +914,6 @@ describe("blackberry.pim.calendar", function () {
                 waitsFor(function () {
                     return found;
                 }, "Event not found", timeout);
-
-                runs(function () {
-                    expect(successCb1).toHaveBeenCalled();
-                    expect(successCb2).toHaveBeenCalled();
-                    expect(errorCb).not.toHaveBeenCalled();
-                });
             } else {
                 this.fail(new Error("Default folder not accessible (probably set to work account)"));
             }
@@ -932,7 +926,7 @@ describe("blackberry.pim.calendar", function () {
                 var start = new Date("Jan 6, 2014, 12:00"),
                     end = new Date("Jan 6, 2014, 12:30"),
                     location = "some location",
-                    summary = "WebWorksTest recurring event no constructor",
+                    summary = "WebWorksTest recurring event no constructor (wwt005b)",
                     rule = {
                         "frequency": CalendarRepeatRule.FREQUENCY_MONTHLY,
                         "expires": new Date("Dec 31, 2014"),
@@ -962,6 +956,90 @@ describe("blackberry.pim.calendar", function () {
                 runs(function () {
                     expect(successCb).toHaveBeenCalled();
                     expect(errorCb).not.toHaveBeenCalled();
+                });
+            } else {
+                this.fail(new Error("Default folder not accessible (probably set to work account)"));
+            }
+        });
+
+        it('Can remove a single occurrence of a recurring event', function () {
+            if (isDefaultFolderAccessible()) {
+                var called = false,
+                    foundEvents,
+                    removeSuccessCb = jasmine.createSpy("Remove success callback").andCallFake(function (){
+                        called = true;
+                    }),
+                    successCb = jasmine.createSpy("Find success callback").andCallFake(function (events) {
+                        expect(events).toBeDefined();
+                        expect(Array.isArray(events)).toBeTruthy();
+                        foundEvents = events;
+                        called = true;
+                    }),
+                    errorCb = jasmine.createSpy().andCallFake(function (error) {
+                        called = true;
+                    });
+
+                cal.findEvents({
+                    "filter": {
+                        "substring": "wwt005b"
+                    },
+                    "expandRecurring": true
+                }, successCb, errorCb);
+
+                waitsFor(function () {
+                    return called;
+                }, "Find event did not return", timeout);
+
+                runs(function () {
+                    expect(successCb).toHaveBeenCalled();
+                    expect(errorCb).not.toHaveBeenCalled();
+
+                    if (Array.isArray(foundEvents) && foundEvents.length === 4) {
+                        called = false;
+                        // remove the Feb occurence
+                        foundEvents[1].remove(removeSuccessCb, errorCb, false);
+                    }
+                });
+
+                waitsFor(function () {
+                    return called;
+                }, "Remove did not return", timeout);
+
+                runs(function () {
+                    expect(removeSuccessCb).toHaveBeenCalled();
+                    expect(errorCb).not.toHaveBeenCalled();
+
+                    called = false;
+                    cal.findEvents({
+                        "filter": {
+                            "substring": "wwt005b"
+                        },
+                        "expandRecurring": true
+                    }, successCb, errorCb);
+                });
+
+                waitsFor(function () {
+                    return called;
+                }, "Find event did not return", timeout);
+
+                runs(function () {
+                    var starts = [];
+
+                    expect(successCb).toHaveBeenCalled();
+                    expect(errorCb).not.toHaveBeenCalled();
+
+                    expect(Array.isArray(foundEvents)).toBeTruthy();
+                    expect(foundEvents.length).toBe(3);
+
+                    if (Array.isArray(foundEvents) && foundEvents.length === 3) {
+                        foundEvents.forEach(function (evt) {
+                            starts.push(evt.start.toISOString());
+                        });
+                    }
+
+                    expect(starts).toContain(new Date("Jan 6, 2014, 12:00").toISOString());
+                    expect(starts).toContain(new Date("March 6, 2014, 12:00").toISOString());
+                    expect(starts).toContain(new Date("April 6, 2014, 12:00").toISOString());
                 });
             } else {
                 this.fail(new Error("Default folder not accessible (probably set to work account)"));
@@ -1820,62 +1898,70 @@ describe("blackberry.pim.calendar", function () {
             }
         });
 
-        xit('Can get all events (max=findOptions.limit) if filter is a blank object without any params', function () {
-            var called = false,
-                successCb = jasmine.createSpy().andCallFake(function (events) {
-                    expect(events).toBeDefined();
-                    expect(Array.isArray(events)).toBeTruthy();
-                    expect(events.length).toEqual(5);
-                    called = true;
-                }),
-                errorCb = jasmine.createSpy().andCallFake(function (error) {
-                    called = true;
-                }),
-                filter = {},
-                findOptions = {
-                    "filter": filter,
-                    "detail": CalendarFindOptions.DETAIL_FULL,
-                    "limit": 5
-                };
+        it('Can get all events (max=findOptions.limit) if filter is a blank object without any params', function () {
+            if (isDefaultFolderAccessible()) {
+                var called = false,
+                    successCb = jasmine.createSpy().andCallFake(function (events) {
+                        expect(events).toBeDefined();
+                        expect(Array.isArray(events)).toBeTruthy();
+                        expect(events.length).toEqual(5);
+                        called = true;
+                    }),
+                    errorCb = jasmine.createSpy().andCallFake(function (error) {
+                        called = true;
+                    }),
+                    filter = {},
+                    findOptions = {
+                        "filter": filter,
+                        "detail": CalendarFindOptions.DETAIL_FULL,
+                        "limit": 5
+                    };
 
-            cal.findEvents(findOptions, successCb, errorCb);
+                cal.findEvents(findOptions, successCb, errorCb);
 
-            waitsFor(function () {
-                return called;
-            }, "Find callback not invoked", timeout);
+                waitsFor(function () {
+                    return called;
+                }, "Find callback not invoked", timeout);
 
-            runs(function () {
-                expect(errorCb).not.toHaveBeenCalled();
-                expect(successCb).toHaveBeenCalled();
-            });
+                runs(function () {
+                    expect(errorCb).not.toHaveBeenCalled();
+                    expect(successCb).toHaveBeenCalled();
+                });
+            } else {
+                this.fail(new Error("Default folder not accessible (probably set to work account)"));
+            }
         });
 
-        xit('Can get all events (max=findOptions.limit) if filter is not defined in CalendarFindOptions', function () {
-            var called = false,
-                successCb = jasmine.createSpy().andCallFake(function (events) {
-                    expect(events).toBeDefined();
-                    expect(Array.isArray(events)).toBeTruthy();
-                    expect(events.length).toEqual(5);
-                    called = true;
-                }),
-                errorCb = jasmine.createSpy().andCallFake(function (error) {
-                    called = true;
-                }),
-                findOptions = {
-                    "detail": CalendarFindOptions.DETAIL_FULL,
-                    "limit": 5
-                };
+        it('Can get all events (max=findOptions.limit) if filter is not defined in CalendarFindOptions', function () {
+            if (isDefaultFolderAccessible()) {
+                var called = false,
+                    successCb = jasmine.createSpy().andCallFake(function (events) {
+                        expect(events).toBeDefined();
+                        expect(Array.isArray(events)).toBeTruthy();
+                        expect(events.length).toEqual(5);
+                        called = true;
+                    }),
+                    errorCb = jasmine.createSpy().andCallFake(function (error) {
+                        called = true;
+                    }),
+                    findOptions = {
+                        "detail": CalendarFindOptions.DETAIL_FULL,
+                        "limit": 5
+                    };
 
-            cal.findEvents(findOptions, successCb, errorCb);
+                cal.findEvents(findOptions, successCb, errorCb);
 
-            waitsFor(function () {
-                return called;
-            }, "Find callback not invoked", timeout);
+                waitsFor(function () {
+                    return called;
+                }, "Find callback not invoked", timeout);
 
-            runs(function () {
-                expect(errorCb).not.toHaveBeenCalled();
-                expect(successCb).toHaveBeenCalled();
-            });
+                runs(function () {
+                    expect(errorCb).not.toHaveBeenCalled();
+                    expect(successCb).toHaveBeenCalled();
+                });
+            } else {
+                this.fail(new Error("Default folder not accessible (probably set to work account)"));
+            }
         });
 
         xit('Can get all events (max=infinity) if findOptions is a blank object without any params', function () {
@@ -1979,71 +2065,83 @@ describe("blackberry.pim.calendar", function () {
             }
         });
 
-        xit('can sort search results by end time (asc)', function () {
-            var called = false,
-                filter = {
-                    "substring": "wwt013",
-                    "expandRecurring": false
-                },
-                findOptions = {
-                    "filter": filter,
-                    "sort": [{"fieldName": CalendarFindOptions.SORT_FIELD_END, "desc": false}],
-                    "detail": CalendarFindOptions.DETAIL_FULL
-                },
-                successCb = jasmine.createSpy().andCallFake(function (events) {
-                    expect(events.length).toBe(3);
-                    expect(events[0].summary).toBe("(wwt013) WebWorksTest abcd");
-                    called = true;
-                }),
-                errorCb = jasmine.createSpy().andCallFake(function () {
-                    called = true;
+        it('can sort search results by end time (asc)', function () {
+            if (isDefaultFolderAccessible()) {
+                var called = false,
+                    filter = {
+                        "substring": "wwt013",
+                        "expandRecurring": false
+                    },
+                    findOptions = {
+                        "filter": filter,
+                        "sort": [{"fieldName": CalendarFindOptions.SORT_FIELD_END, "desc": false}],
+                        "detail": CalendarFindOptions.DETAIL_FULL
+                    },
+                    successCb = jasmine.createSpy().andCallFake(function (events) {
+                        expect(events.length).toBe(3);
+                        expect(events[0].summary).toBe("(wwt013) WebWorksTest abcd");
+                        called = true;
+                    }),
+                    errorCb = jasmine.createSpy().andCallFake(function () {
+                        called = true;
+                    });
+
+                cal.findEvents(findOptions, successCb, errorCb);
+
+                waitsFor(function () {
+                    return called;
+                }, "Find callback not invoked", timeout);
+
+                runs(function () {
+                    expect(successCb).toHaveBeenCalled();
+                    expect(errorCb).not.toHaveBeenCalled();
                 });
-
-            cal.findEvents(findOptions, successCb, errorCb);
-
-            waitsFor(function () {
-                return called;
-            }, "Find callback not invoked", timeout);
-
-            runs(function () {
-                expect(successCb).toHaveBeenCalled();
-                expect(errorCb).not.toHaveBeenCalled();
-            });
+            } else {
+                this.fail(new Error("Default folder not accessible (probably set to work account)"));
+            }
         });
 
-        xit('can sort search results by location (asc)', function () {
-            var called = false,
-                filter = {
-                    "substring": "wwt013",
-                    "expandRecurring": false
-                },
-                findOptions = {
-                    "filter": filter,
-                    "sort": [{"fieldName": CalendarFindOptions.SORT_FIELD_LOCATION, "desc": false}],
-                    "detail": CalendarFindOptions.DETAIL_FULL
-                },
-                successCb = jasmine.createSpy().andCallFake(function (events) {
-                    // TODO: this fails due to the following PR
-                    // PR 218835 - Using location as sort field in CalendarService::events() does not return any results
-                    expect(events.length).toBe(3);
-                    expect(events[0].summary).toBe("(wwt013) WebWorksTest abc");
-                    expect(events[0].location).toBe("Home");
-                    called = true;
-                }),
-                errorCb = jasmine.createSpy().andCallFake(function () {
-                    called = true;
+        it('can sort search results by location (asc)', function () {
+            if (isDefaultFolderAccessible()) {
+                var called = false,
+                    filter = {
+                        "substring": "wwt013",
+                        "expandRecurring": false
+                    },
+                    findOptions = {
+                        "filter": filter,
+                        "sort": [{"fieldName": CalendarFindOptions.SORT_FIELD_LOCATION, "desc": false}],
+                        "detail": CalendarFindOptions.DETAIL_FULL
+                    },
+                    successCb = jasmine.createSpy().andCallFake(function (events) {
+                        // TODO: this fails due to the following PR
+                        // PR 218835 - Using location as sort field in CalendarService::events() does not return any results
+                        expect(events.length).toBe(3);
+
+                        if (events.length === 3) {
+                            expect(events[0].summary).toBe("(wwt013) WebWorksTest abc");
+                            expect(events[0].location).toBe("Home");
+                        }
+
+                        called = true;
+                    }),
+                    errorCb = jasmine.createSpy().andCallFake(function () {
+                        called = true;
+                    });
+
+                cal.findEvents(findOptions, successCb, errorCb);
+
+                waitsFor(function () {
+                    return called;
+                }, "Find callback not invoked", timeout);
+
+                runs(function () {
+                    expect(successCb).toHaveBeenCalled();
+                    expect(errorCb).not.toHaveBeenCalled();
                 });
-
-            cal.findEvents(findOptions, successCb, errorCb);
-
-            waitsFor(function () {
-                return called;
-            }, "Find callback not invoked", timeout);
-
-            runs(function () {
-                expect(successCb).toHaveBeenCalled();
-                expect(errorCb).not.toHaveBeenCalled();
-            });
+            } else {
+                this.fail(new Error("Default folder not accessible (probably set to work account)"));
+            }
         });
     });
 

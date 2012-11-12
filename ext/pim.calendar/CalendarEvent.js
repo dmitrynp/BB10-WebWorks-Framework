@@ -105,14 +105,6 @@ CalendarEvent.prototype.save = function (onSaveSuccess, onSaveError) {
     });
 
     if (args.attendees) {
-        if (this.folder) {
-            // if folder is defined for this event, check if folder supports participants
-            if (!this.folder.supportsParticipants) {
-                calendarUtils.invokeErrorCallback(errorCallback, CalendarError.INVALID_ARGUMENT_ERROR);
-                return;
-            }
-        }
-
         Object.getOwnPropertyNames(args.attendees).forEach(function (key) {
             if (args.attendees[key].contactId && !window.isNaN(args.attendees[key].contactId)) {
                 args.attendees[key].contactId = window.parseInt(args.attendees[key].contactId);
