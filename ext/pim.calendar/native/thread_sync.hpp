@@ -22,8 +22,8 @@
 
 class ThreadSync {
 public:
-	ThreadSync();
-	virtual ~ThreadSync(){pthread_mutex_destroy(&_lock);}
+    ThreadSync();
+    virtual ~ThreadSync(){pthread_mutex_destroy(&_lock);}
 protected:
     int MUTEX_LOCK();
     int MUTEX_UNLOCK();

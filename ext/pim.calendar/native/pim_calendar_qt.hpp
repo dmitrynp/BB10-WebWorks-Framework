@@ -58,8 +58,6 @@ struct PimCalendarThreadInfo {
     std::string eventId;
 };
 
-typedef std::pair<std::string, bbpim::CalendarFolder> FolderPair;
-
 const quint32 UNDEFINED_UINT = std::numeric_limits<quint32>::max();
 
 class PimCalendarQt : public ThreadSync {
@@ -90,7 +88,6 @@ private:
     Json::Value populateEvent(const bbpim::CalendarEvent& event, bool isFind);
     static AccountFolderManager _mgr;
     static ServiceProvider& _provider;
-    //static pthread_mutex_t _lock;
 };
 
 } // namespace webworks

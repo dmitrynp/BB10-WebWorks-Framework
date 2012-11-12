@@ -23,7 +23,6 @@
 
 PimCalendar::PimCalendar(const std::string& id) : m_id(id)
 {
-    fprintf(stderr, "DEBUG: PimCalendar::PimCalendar(%s)\n", id.c_str());
 }
 
 char* onGetObjList()
@@ -45,8 +44,6 @@ JSExt* onCreateObject(const std::string& className, const std::string& id)
 
 std::string PimCalendar::InvokeMethod(const std::string& command)
 {
-    fprintf(stderr, "DEBUG: PimCalendar::InvokeMethod: %s\n", command.c_str());
-    fprintf(stderr, "PimCalendar::InvokeMethod: %s\n", command.c_str());
     unsigned int index = command.find_first_of(" ");
 
     string strCommand;
@@ -63,15 +60,12 @@ std::string PimCalendar::InvokeMethod(const std::string& command)
         bool parse = reader.parse(jsonObject, *obj);
 
         if (!parse) {
-            fprintf(stderr, "%s", "error parsing\n");
             return "Cannot parse JSON object";
         }
     } else {
         strCommand = command;
         obj = NULL;
     }
-
-    fprintf(stderr, "strCommand: %s\n", strCommand.c_str());
 
     if (strCommand == "find") {
         startThread(FindThread, obj);

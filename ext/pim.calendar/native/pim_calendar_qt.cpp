@@ -52,10 +52,10 @@
 namespace webworks {
 
 
-ServiceProvider& PimCalendarQt::_provider = ServiceProvider::getServiceProvider();
+ServiceProvider& PimCalendarQt::_provider = ServiceProvider::GetServiceProvider();
 AccountFolderManager PimCalendarQt::_mgr = AccountFolderManager(_provider);
 
-PimCalendarQt::PimCalendarQt() /*: _mgr(AccountFolderManager())*/
+PimCalendarQt::PimCalendarQt()
 {
     pthread_mutex_init(&_lock, NULL);
 }
@@ -128,7 +128,6 @@ Json::Value PimCalendarQt::Save(const Json::Value& attributeObj)
 {
     Json::Value returnObj;
 
-    fprintf(stderr, "#### PimCalendarQt::Save: Starting");
     if (!attributeObj.isMember("id") || attributeObj["id"].isNull() || !attributeObj["id"].isInt()) {
         returnObj = CreateCalendarEvent(attributeObj);
     } else {
@@ -136,7 +135,7 @@ Json::Value PimCalendarQt::Save(const Json::Value& attributeObj)
         int accountId = attributeObj["accountId"].asInt();
         bbpim::Result::Type result;
         bbpim::CalendarService* service = getCalendarService();
-	    if (MUTEX_LOCK() == 0) {
+        if (MUTEX_LOCK() == 0) {
             bbpim::CalendarEvent event = service->event(accountId, eventId, &result);
             MUTEX_UNLOCK();
 
@@ -241,8 +240,6 @@ Json::Value PimCalendarQt::CreateCalendarEvent(const Json::Value& args)
     bbpim::CalendarEvent ev;
     QList<QDateTime> exceptionDates;
 
-    fprintf(stderr, "Begin create!%s\n", "");
-
     if (args.isMember("accountId") && args["accountId"].isInt() &&
         args.isMember("folderId") && args["folderId"].isInt()) {
         ev.setAccountId(args["accountId"].asInt());
@@ -275,7 +272,7 @@ Json::Value PimCalendarQt::CreateCalendarEvent(const Json::Value& args)
         QString targetTimezone = QString(args["targetTimezone"].asCString());
         QString sourceTimezone = QString(args["sourceTimezone"].asCString());
 
-	    if (MUTEX_LOCK() == 0) {
+        if (MUTEX_LOCK() == 0) {
             bbpim::Result::Type result = service->createRecurrenceException(ev, TimezoneUtils::ConvertToTargetFromUtc(getDate(args["originalStartTime"]), true, targetTimezone, sourceTimezone));
             MUTEX_UNLOCK();
             if (result != bbpim::Result::Success) {
@@ -289,8 +286,7 @@ Json::Value PimCalendarQt::CreateCalendarEvent(const Json::Value& args)
             return returnObj;
         }
     } else {
-        fprintf(stderr, "before create!%s\n", "");
-	    if (MUTEX_LOCK() == 0) {
+        if (MUTEX_LOCK() == 0) {
             bbpim::Result::Type result = service->createEvent(ev);
             MUTEX_UNLOCK();
             if (result != bbpim::Result::Success) {
@@ -305,16 +301,13 @@ Json::Value PimCalendarQt::CreateCalendarEvent(const Json::Value& args)
        }
     }
 
-    fprintf(stderr, "after create!%s\n", "");
-
     for (int i = 0; i < exceptionDates.size(); i++) {
         bbpim::CalendarEvent exceptionEvent;
-        fprintf(stderr, "Exception date[%d]=%s\n", i, exceptionDates[i].toString().toStdString().c_str());
         exceptionEvent.setStartTime(exceptionDates[i]);
         exceptionEvent.setId(ev.id());
         exceptionEvent.setAccountId(ev.accountId());
         bbpim::Result::Type result;
-	    if (MUTEX_LOCK() == 0) {
+        if (MUTEX_LOCK() == 0) {
             result = service->createRecurrenceExclusion(exceptionEvent);
             MUTEX_UNLOCK();
             if (result == bbpim::Result::BackEndError) {
@@ -421,7 +414,7 @@ Json::Value PimCalendarQt::EditCalendarEvent(bbpim::CalendarEvent& calEvent, con
                 exceptionEvent.setId(calEvent.id());
                 exceptionEvent.setAccountId(calEvent.accountId());
 
-                if (MUTEX_LOCK() == 0) { 
+                if (MUTEX_LOCK() == 0) {
                     result = service->createRecurrenceExclusion(exceptionEvent);
                     MUTEX_UNLOCK();
                 }
@@ -432,7 +425,7 @@ Json::Value PimCalendarQt::EditCalendarEvent(bbpim::CalendarEvent& calEvent, con
                 returnObj["_success"] = true;
             }
         }
-    } 
+    }
     if (returnObj.empty()) {
         returnObj["_success"] = false;
         returnObj["code"] = UNKNOWN_ERROR;
@@ -500,7 +493,7 @@ bool PimCalendarQt::getSearchParams(bbpim::EventSearchParameters& searchParams, 
         if (!filter["start"].empty()) {
             QString sourceTimezone = QString(options["sourceTimezone"].asCString());
             QDateTime date = getDate(filter["start"].asCString());
-            searchParams.setStart(TimezoneUtils::ConvertToTargetFromUtc(date, false, "", sourceTimezone)); // TODO(rtse): check
+            searchParams.setStart(TimezoneUtils::ConvertToTargetFromUtc(date, false, "", sourceTimezone));
         } else {
             searchParams.setStart(now.addYears(-100));
         }
@@ -509,7 +502,7 @@ bool PimCalendarQt::getSearchParams(bbpim::EventSearchParameters& searchParams, 
         if (!filter["end"].empty()) {
             QString sourceTimezone = QString(options["sourceTimezone"].asCString());
             QDateTime date = getDate(filter["end"].asCString());
-            searchParams.setEnd(TimezoneUtils::ConvertToTargetFromUtc(date, false, "", sourceTimezone)); // TODO(rtse): check
+            searchParams.setEnd(TimezoneUtils::ConvertToTargetFromUtc(date, false, "", sourceTimezone));
         } else {
             searchParams.setEnd(now.addYears(100));
         }
@@ -736,7 +729,7 @@ Json::Value PimCalendarQt::populateEvent(const bbpim::CalendarEvent& event, bool
 
     if (!isFind) {
         bbpim::CalendarFolder folder = _mgr.GetFolder(event.accountId(), event.folderId());
-        e["folder"] = _mgr.GetFolderJson(folder, false); //getCalendarFolderByFolderKey(event.accountId(), event.folderId());
+        e["folder"] = _mgr.GetFolderJson(folder, false);
     }
 
     e["folderId"] = intToStr(event.folderId());

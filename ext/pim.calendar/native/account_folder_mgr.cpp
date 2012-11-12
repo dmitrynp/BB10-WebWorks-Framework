@@ -18,130 +18,122 @@
 #include <QList>
 #include <QPair>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <map>
 
 #include "account_folder_mgr.hpp"
 
-AccountFolderManager::AccountFolderManager(ServiceProvider& provider) : m_provider(provider) //m_calendarService(new bbpim::CalendarService()), m_accountService(new bbpimAccount::AccountService()) /* : m_provider(provider)*/
+AccountFolderManager::AccountFolderManager(ServiceProvider& provider) : m_provider(provider)
 {
-	fprintf(stderr, "AccountFolderManager constructor%s\n", "");
 }
 
 bbpimAccount::Account AccountFolderManager::GetAccount(bbpim::AccountId accountId, bool fresh)
 {
-	fprintf(stderr, "AccountFolderManager GetAccount starts%s\n", "");
-	if (fresh || m_accountsMap.find(accountId) == m_accountsMap.end()) {
-		fprintf(stderr, "GetAccount will fetch account%s\n", "");
-		fetchAccounts();
-		fprintf(stderr, "GetAccount after fetch account%s\n", "");
-	}
+    if (fresh || m_accountsMap.find(accountId) == m_accountsMap.end()) {
+        fetchAccounts();
+    }
 
-	return m_accountsMap[accountId];
+    return m_accountsMap[accountId];
 }
 
 QList<bbpimAccount::Account> AccountFolderManager::GetAccounts(bool fresh)
 {
-	fprintf(stderr, "AccountFolderManager GetAccounts starts%s\n", "");
-	if (fresh || m_accountsMap.empty()) {
-		fprintf(stderr, "GetAccounts will fetchAccounts%s\n", "");
-		fetchAccounts();
-		fprintf(stderr, "GetAccounts after fetchAccounts%s\n", "");
-	}
+    if (fresh || m_accountsMap.empty()) {
+        fetchAccounts();
+    }
 
-	QList<bbpimAccount::Account> list;
-	for (std::map<bbpim::AccountId, bbpimAccount::Account>::const_iterator i = m_accountsMap.begin(); i != m_accountsMap.end(); i++) {
-		list.append(i->second);
-	}
-	fprintf(stderr, "GetAccounts list empty? %s\n", list.empty() ? "true" : "false");
+    QList<bbpimAccount::Account> list;
+    for (std::map<bbpim::AccountId, bbpimAccount::Account>::const_iterator i = m_accountsMap.begin(); i != m_accountsMap.end(); i++) {
+        list.append(i->second);
+    }
 
-	return list;
+    return list;
 }
 
 bbpimAccount::Account AccountFolderManager::GetDefaultAccount(bool fresh)
 {
-	if (fresh || !m_defaultAccount.isValid()) {
-		fetchDefaultAccount();
-	}
+    if (fresh || !m_defaultAccount.isValid()) {
+        fetchDefaultAccount();
+    }
 
-	return m_defaultAccount;
+    return m_defaultAccount;
 }
 
 bbpim::CalendarFolder AccountFolderManager::GetDefaultFolder(bool fresh)
 {
-	if (fresh || !m_defaultFolder.isValid()) {
-		fetchDefaultFolder();
-	}
+    if (fresh || !m_defaultFolder.isValid()) {
+        fetchDefaultFolder();
+    }
 
-	return m_defaultFolder;
+    return m_defaultFolder;
 }
 
 bool AccountFolderManager::IsDefaultFolder(const bbpim::CalendarFolder& folder, bool fresh)
 {
-	bbpim::CalendarFolder defaultFolder = GetDefaultFolder(fresh);
-	return (folder.accountId() == defaultFolder.accountId() && folder.id() == defaultFolder.id());
+    bbpim::CalendarFolder defaultFolder = GetDefaultFolder(fresh);
+    return (folder.accountId() == defaultFolder.accountId() && folder.id() == defaultFolder.id());
 }
 
 bbpim::CalendarFolder AccountFolderManager::GetFolder(bbpim::AccountId accountId, bbpim::FolderId folderId, bool fresh)
 {
-	fprintf(stderr, "AccountFolderManager GetFolder starts%s\n", "");
-	std::string key = GetFolderKey(accountId, folderId);
-	fprintf(stderr, "GetFolder key = %s\n", key.c_str());
-	if (fresh || m_foldersMap.find(key) == m_foldersMap.end()) {
-		fprintf(stderr, "GetFolder will fetch folders%s\n", "");
-		fetchFolders();
-		fprintf(stderr, "GetFolder after fetch folders%s\n", "");
-	}
+    std::string key = GetFolderKey(accountId, folderId);
 
-	return m_foldersMap[key];
+    if (fresh || m_foldersMap.find(key) == m_foldersMap.end()) {
+        fetchFolders();
+    }
+
+    return m_foldersMap[key];
 }
 
 QList<bbpim::CalendarFolder> AccountFolderManager::GetFolders(bool fresh)
 {
-	if (fresh || m_foldersMap.empty()) {
-		fetchFolders();
-	}
+    if (fresh || m_foldersMap.empty()) {
+        fetchFolders();
+    }
 
-	QList<bbpim::CalendarFolder> list;
-	for (std::map<std::string, bbpim::CalendarFolder>::const_iterator i = m_foldersMap.begin(); i != m_foldersMap.end(); i++) {
-		list.append(i->second);
-	}
+    QList<bbpim::CalendarFolder> list;
+    for (std::map<std::string, bbpim::CalendarFolder>::const_iterator i = m_foldersMap.begin(); i != m_foldersMap.end(); i++) {
+        list.append(i->second);
+    }
 
-	return list;
+    return list;
 }
 
 QList<bbpim::CalendarFolder> AccountFolderManager::GetFoldersForAccount(bbpim::AccountId accountId, bool fresh)
 {
-	QList<bbpim::CalendarFolder> folders = GetFolders(fresh);
-	QList<bbpim::CalendarFolder> result;
+    QList<bbpim::CalendarFolder> folders = GetFolders(fresh);
+    QList<bbpim::CalendarFolder> result;
 
-	for (QList<bbpim::CalendarFolder>::const_iterator i = folders.constBegin(); i != folders.constEnd(); i++) {
-		bbpim::CalendarFolder folder = *i;
+    for (QList<bbpim::CalendarFolder>::const_iterator i = folders.constBegin(); i != folders.constEnd(); i++) {
+        bbpim::CalendarFolder folder = *i;
 
-		if (folder.accountId() == accountId) {
-			result.append(folder);
-		}
-	}
+        if (folder.accountId() == accountId) {
+            result.append(folder);
+        }
+    }
 
-	return result;
+    return result;
 }
 
 Json::Value AccountFolderManager::GetAccountJson(const bbpimAccount::Account& account, bool fresh)
 {
-	Json::Value val;
+    Json::Value val;
 
-	val["id"] = intToStr(account.id());
-	val["name"] = account.displayName().toStdString();
-	val["enterprise"] = account.isEnterprise();
+    val["id"] = intToStr(account.id());
+    val["name"] = account.displayName().toStdString();
+    val["enterprise"] = account.isEnterprise();
 
-	Json::Value foldersVal;
-	QList<bbpim::CalendarFolder> folders = GetFoldersForAccount(account.id(), fresh);
-	for (QList<bbpim::CalendarFolder>::const_iterator i = folders.constBegin(); i != folders.constEnd(); i++) {
-		bbpim::CalendarFolder folder = *i;
-		foldersVal.append(GetFolderJson(folder, false, false));
-	}
+    Json::Value foldersVal;
+    QList<bbpim::CalendarFolder> folders = GetFoldersForAccount(account.id(), fresh);
+    for (QList<bbpim::CalendarFolder>::const_iterator i = folders.constBegin(); i != folders.constEnd(); i++) {
+        bbpim::CalendarFolder folder = *i;
+        foldersVal.append(GetFolderJson(folder, false, false));
+    }
 
-	val["folders"] = foldersVal;
+    val["folders"] = foldersVal;
 
-	return val;
+    return val;
 }
 
 Json::Value AccountFolderManager::GetFolderJson(const bbpim::CalendarFolder& folder, bool skipDefaultCheck, bool fresh) {
@@ -204,63 +196,60 @@ Json::Value AccountFolderManager::GetFolderJson(const bbpim::CalendarFolder& fol
     val["visible"] = folder.isVisible();
     val["default"] = skipDefaultCheck ? true : IsDefaultFolder(folder, fresh);
     val["enterprise"] = GetAccount(folder.accountId(), false).isEnterprise() == 1 ? true : false;
-    
+
     return val;
 }
 
 void AccountFolderManager::fetchAccounts()
 {
-	if (MUTEX_LOCK() == 0) {
-		m_accountsMap.clear();
-		QList<bbpimAccount::Account> accounts = getAccountService()->accounts(bbpimAccount::Service::Calendars);
-		for (QList<bbpimAccount::Account>::const_iterator i = accounts.constBegin(); i != accounts.constEnd(); i++) {
-			bbpimAccount::Account account = *i;
-			m_accountsMap.insert(std::pair<bbpim::AccountId, bbpimAccount::Account>(account.id(), account));
-		}
-		MUTEX_UNLOCK();
-	}
+    if (MUTEX_LOCK() == 0) {
+        m_accountsMap.clear();
+        QList<bbpimAccount::Account> accounts = getAccountService()->accounts(bbpimAccount::Service::Calendars);
+        for (QList<bbpimAccount::Account>::const_iterator i = accounts.constBegin(); i != accounts.constEnd(); i++) {
+            bbpimAccount::Account account = *i;
+            m_accountsMap.insert(std::pair<bbpim::AccountId, bbpimAccount::Account>(account.id(), account));
+        }
+        MUTEX_UNLOCK();
+    }
 }
 
 void AccountFolderManager::fetchFolders()
 {
-	if (MUTEX_LOCK() == 0) {
-		fprintf(stderr, "AccountFolderManager fetchFolders starts%s\n", "");
-		m_foldersMap.clear();
-		QList<bbpim::CalendarFolder> folders = getCalendarService()->folders();
-		fprintf(stderr, "fetchFolders after native%s\n", "");
-		for (QList<bbpim::CalendarFolder>::const_iterator i = folders.constBegin(); i != folders.constEnd(); i++) {
-			bbpim::CalendarFolder folder = *i;
-			std::string key = GetFolderKey(folder.accountId(), folder.id());
-			fprintf(stderr, "will insert to map%s\n", "");
-			m_foldersMap.insert(std::pair<std::string, bbpim::CalendarFolder>(key, folder));
-			fprintf(stderr, "will insert to map%s\n", "");
-		}
-		MUTEX_UNLOCK();
-	}
+    if (MUTEX_LOCK() == 0) {
+        m_foldersMap.clear();
+        QList<bbpim::CalendarFolder> folders = getCalendarService()->folders();
+
+        for (QList<bbpim::CalendarFolder>::const_iterator i = folders.constBegin(); i != folders.constEnd(); i++) {
+            bbpim::CalendarFolder folder = *i;
+            std::string key = GetFolderKey(folder.accountId(), folder.id());
+            m_foldersMap.insert(std::pair<std::string, bbpim::CalendarFolder>(key, folder));
+        }
+        MUTEX_UNLOCK();
+    }
 }
 
 void AccountFolderManager::fetchDefaultAccount()
 {
-	if (MUTEX_LOCK() == 0) {
-		m_defaultAccount = getAccountService()->defaultAccount(bbpimAccount::Service::Calendars);
-		MUTEX_UNLOCK();
-	}
+    if (MUTEX_LOCK() == 0) {
+        m_defaultAccount = getAccountService()->defaultAccount(bbpimAccount::Service::Calendars);
+        MUTEX_UNLOCK();
+    }
 }
 
 void AccountFolderManager::fetchDefaultFolder()
 {
-	bbpim::AccountId accountId = GetDefaultAccount().id();
-	if (MUTEX_LOCK() == 0) {
-		bbpim::FolderId folderId = bbpim::FolderId(getAccountService()->getDefault(bb::pim::account::Service::Calendars));
-		MUTEX_UNLOCK();
+    bbpim::AccountId accountId = GetDefaultAccount().id();
+    if (MUTEX_LOCK() == 0) {
+        bbpim::FolderId folderId = bbpim::FolderId(getAccountService()->getDefault(bb::pim::account::Service::Calendars));
+        MUTEX_UNLOCK();
 
-		std::string key = GetFolderKey(accountId, folderId);
-		if (m_foldersMap.find(key) == m_foldersMap.end()) {
-			fetchFolders();
-	    }
+        std::string key = GetFolderKey(accountId, folderId);
+        if (m_foldersMap.find(key) == m_foldersMap.end()) {
+            fetchFolders();
+        }
 
-    	m_defaultFolder = m_foldersMap[key];
-	}
+        m_defaultFolder = m_foldersMap[key];
+    }
 }
 
 std::string AccountFolderManager::GetFolderKey(const bbpim::AccountId accountId, const bbpim::FolderId folderId)
@@ -281,12 +270,10 @@ std::string AccountFolderManager::intToStr(const int val)
 
 bbpim::CalendarService* AccountFolderManager::getCalendarService()
 {
-	return m_provider.GetCalendarService();
-	//return m_calendarService;
+    return m_provider.GetCalendarService();
 }
 
 bbpimAccount::AccountService* AccountFolderManager::getAccountService()
 {
-	return m_provider.GetAccountService();
-	//return m_accountService;
+    return m_provider.GetAccountService();
 }

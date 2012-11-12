@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef PIM_CALENDAR_JS_H_
-#define PIM_CALENDAR_JS_H_
+#ifndef PIM_CALENDAR_JS_HPP_
+#define PIM_CALENDAR_JS_HPP_
 
 #include <json/value.h>
 #include <pthread.h>
@@ -28,7 +28,7 @@ class PimCalendar : public JSExt
 {
 public:
     explicit PimCalendar(const std::string& id);
-    virtual ~PimCalendar() {fprintf(stderr, "DEBUG: PimCalendar::~PimCalendar()\n");}
+    virtual ~PimCalendar() {}
     virtual std::string InvokeMethod(const std::string& command);
     virtual bool CanDelete();
     void NotifyEvent(const std::string& eventId, const std::string& event);
@@ -42,4 +42,4 @@ private:
     std::string m_id;
 };
 
-#endif // PIM_CALENDAR_JS_H_
+#endif // PIM_CALENDAR_JS_HPP_

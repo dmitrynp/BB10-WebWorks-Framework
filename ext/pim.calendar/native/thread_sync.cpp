@@ -16,11 +16,9 @@
 
 #include "thread_sync.hpp"
 
-//pthread_mutex_t ThreadSync::_lock = PTHREAD_MUTEX_INITIALIZER;
-
 ThreadSync::ThreadSync()
 {
-	pthread_mutex_init(&_lock, NULL);
+    pthread_mutex_init(&_lock, NULL);
 }
 int ThreadSync::MUTEX_LOCK()
 {

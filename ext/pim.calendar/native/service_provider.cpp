@@ -16,13 +16,13 @@
 
 #include "service_provider.hpp"
 
-ServiceProvider &ServiceProvider::getServiceProvider()
+ServiceProvider& ServiceProvider::GetServiceProvider()
 {
     static ServiceProvider sp;
     return sp;
 }
 
-ServiceProvider::ServiceProvider() : 
+ServiceProvider::ServiceProvider() :
     m_calendarService(new bb::pim::calendar::CalendarService()),
     m_accountService(new bb::pim::account::AccountService())
 {

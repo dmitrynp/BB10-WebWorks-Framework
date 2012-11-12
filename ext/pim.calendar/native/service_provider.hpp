@@ -22,7 +22,7 @@
 
 class ServiceProvider {
 public:
-    static ServiceProvider &getServiceProvider();
+    static ServiceProvider& GetServiceProvider();
     bb::pim::calendar::CalendarService* GetCalendarService();
     bb::pim::account::AccountService* GetAccountService();
 
@@ -31,7 +31,7 @@ private:
     bb::pim::account::AccountService* m_accountService;
     ServiceProvider();
     ~ServiceProvider();
-    ServiceProvider(ServiceProvider const&);
+    explicit ServiceProvider(ServiceProvider const&);
     void operator=(ServiceProvider const&);
 };
 
