@@ -16,9 +16,14 @@
  
 var _self = {},
     _ID = require("./manifest.json").namespace,
-    _displayPictureEventId = "bbm.self.displayPicture";
+    _displayPictureEventId = "bbm.self.displayPicture",
+    _profileBoxAddItemEventId = "bbm.self.profilebox.addItem",
+    _profileBoxRemoveItemEventId = "bbm.self.profilebox.removeItem",
+    _profileBoxRegisterIconEventId = "bbm.self.profilebox.registerIcon",
+    _profileBoxGetItemIconEventId = "bbm.self.profilebox.getItemIcon";
 
 _self.self = {};
+_self.self.profilebox = {};
 _self.users = {};
 
 function getFieldValue(field) {
@@ -41,7 +46,23 @@ function defineGetter(obj, field) {
     });
 }
 
-function createEventHandler(callback, eventId) {
+function createEventHandler(onSuccess, onError, eventId) {
+    var callback;
+
+    callback = function (data) {
+        if (data) {
+            if (data.error) {
+                if (onError && typeof onError === "function") {
+                    onError(data);
+                }
+            } else {
+                if (onSuccess && typeof onSuccess === "function") {
+                    onSuccess(data.result);
+                }
+            }
+        }
+    };
+    
     if (!window.webworks.event.isOn(eventId)) {
         window.webworks.event.once(_ID, eventId, callback);
     }
@@ -61,9 +82,9 @@ defineGetter(_self.self, "self/ppid");
 defineGetter(_self.self, "self/status");
 defineGetter(_self.self, "self/statusMessage");
 
-_self.self.getDisplayPicture = function (callback) {
+_self.self.getDisplayPicture = function (success, error) {
     var args = { "eventId" : _displayPictureEventId };
-    createEventHandler(callback, _displayPictureEventId);
+    createEventHandler(success, error, _displayPictureEventId);
     return window.webworks.execAsync(_ID, "self/getDisplayPicture", args);
 };
 
@@ -80,6 +101,33 @@ _self.self.setPersonalMessage = function (personalMessage) {
 _self.self.setDisplayPicture = function (displayPicture) {
     var args = { "displayPicture" : displayPicture };
     return window.webworks.execAsync(_ID, "self/setDisplayPicture", args);
+};
+
+_self.self.profilebox.addItem = function (options, callback) {
+    var args = { "options" : options, "eventId" : _profileBoxAddItemEventId };
+    createEventHandler(callback, _profileBoxAddItemEventId);
+    return window.webworks.execAsync(_ID, "self/profilebox/addItem", args);
+};
+
+_self.self.profilebox.removeItem = function (options, callback) {
+    var args = { "options" : options, "eventId" : _profileBoxRemoveItemEventId };
+    createEventHandler(callback, _profileBoxRemoveItemEventId);
+    return window.webworks.execAsync(_ID, "self/profilebox/removeItem", args); 
+};
+
+_self.self.profilebox.clearItems = function () {
+    return window.webworks.execAsync(_ID, "self/profilebox/clearItems"); 
+};
+
+_self.self.profilebox.registerIcon = function (options, callback) {
+    var args = { "options" : options, "eventId" : _profileBoxRegisterIconEventId };
+    createEventHandler(callback, _profileBoxRegisterIconEventId);
+    return window.webworks.execAsync(_ID, "self/profilebox/registerIcon", args); 
+};
+
+_self.self.profilebox.getItemIcon = function (options, callback) {
+    var args = { "options" : options, "eventId" : _profileBoxGetItemIconEventId };
+    return window.webworks.execAsync(_ID, "self/profilebox/getItemIcon", args); 
 };
 
 _self.users.inviteToDownload = function () {

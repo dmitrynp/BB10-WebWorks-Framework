@@ -24,7 +24,8 @@ namespace webworks {
 class Utils {
 public:
     static std::string intToStr(const int val);
-    static int strToInt(const std::string val);
+    static int strToInt(const std::string& val);
+    static std::string toBase64(const unsigned char *input, const size_t size);
 };
 
 } // namespace webworks

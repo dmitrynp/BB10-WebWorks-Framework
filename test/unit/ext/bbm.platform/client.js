@@ -67,6 +67,52 @@ describe("bbm.platform", function () {
             client.self.setDisplayPicture("/tmp/avatar.gif");
             expect(mockedWebworks.execAsync).toHaveBeenCalledWith(_ID, "self/setDisplayPicture", { "displayPicture" : "/tmp/avatar.gif" });
         });
+    });
+
+    describe("bbm.platform.self.profilebox", function () {
+        it("addItem calls execAsync", function () {
+            var args = {
+                    options : {
+                        text : "hello",
+                        cookie : "hellocookie"
+                    },
+                    eventId : "bbm.self.profilebox.addItem"
+                };
+
+            client.self.profilebox.addItem(args.options, function (item) { });
+            expect(mockedWebworks.execAsync).toHaveBeenCalledWith(_ID, "self/profilebox/addItem", args);
+        });
+
+        it("removeItem calls execAsync", function () {
+            var args = {
+                    options : {
+                        id : "hello123",
+                    },
+                    eventId : "bbm.self.profilebox.removeItem"
+                };
+
+            client.self.profilebox.removeItem(args.options);
+            expect(mockedWebworks.execAsync).toHaveBeenCalledWith(_ID, "self/profilebox/removeItem", args);
+        });
+
+        it("clearItems calls execAsync", function () {
+            client.self.profilebox.clearItems();
+            expect(mockedWebworks.execAsync).toHaveBeenCalledWith(_ID, "self/profilebox/clearItems");
+        });
+
+        it("registerIcon calls execAsync", function () {
+            var args = {
+                    options : {
+                        text : "hello",
+                        cookie : "hellocookie",
+                        iconId : 123
+                    },
+                    eventId : "bbm.self.profilebox.registerIcon"
+                };
+
+            client.self.profilebox.registerIcon(args.options);
+            expect(mockedWebworks.execAsync).toHaveBeenCalledWith(_ID, "self/profilebox/registerIcon", args);
+        });
 
     });
 
