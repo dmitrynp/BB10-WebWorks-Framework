@@ -900,7 +900,7 @@ describe("blackberry.pim.calendar", function () {
                             if (!!events[0].attendees) {
                                 expect(events[0].attendees.length).toBe(1);
 
-                                if (events[0].attendees.length == 1) {
+                                if (events[0].attendees.length === 1) {
                                     expect(events[0].attendees[0].email).toBe("abc@blah.com");
                                     expect(events[0].attendees[0].name).toBe("John Doe");
                                 }
@@ -966,7 +966,7 @@ describe("blackberry.pim.calendar", function () {
             if (isDefaultFolderAccessible()) {
                 var called = false,
                     foundEvents,
-                    removeSuccessCb = jasmine.createSpy("Remove success callback").andCallFake(function (){
+                    removeSuccessCb = jasmine.createSpy("Remove success callback").andCallFake(function () {
                         called = true;
                     }),
                     successCb = jasmine.createSpy("Find success callback").andCallFake(function (events) {

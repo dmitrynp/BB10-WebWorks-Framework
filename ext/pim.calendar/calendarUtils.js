@@ -97,11 +97,15 @@ function validateFindArguments(findOptions) {
         }
 
         if (!error && findOptions.filter.folders) {
-            findOptions.filter.folders.forEach(function (folder) {
-                if (!folder || !folder.id || isNaN(parseInt(folder.id, 10)) || !folder.accountId || isNaN(folder.accountId, 10)) {
-                    error = true;
-                }
-            });
+            if (!Array.isArray(findOptions.filter.folders)) {
+                error = true;
+            } else {
+                findOptions.filter.folders.forEach(function (folder) {
+                    if (!folder || !folder.id || isNaN(parseInt(folder.id, 10)) || !folder.accountId || isNaN(folder.accountId, 10)) {
+                        error = true;
+                    }
+                });
+            }
         }
     }
 

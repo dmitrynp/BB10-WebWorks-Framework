@@ -36,6 +36,24 @@ function checkPermission(success, eventId) {
     return true;
 }
 
+function getCurrentTimezone(success, eventId) {
+    var timezone = null;
+
+    try {
+        timezone = window.qnx.webplatform.device.timezone;
+    } catch (e) {
+        _event.trigger(eventId, {
+            "result": escape(JSON.stringify({
+                "_success": false,
+                "code": CalendarError.UNKNOWN_ERROR
+            }))
+        });
+        success();
+    }
+
+    return timezone;
+}
+
 module.exports = {
     find: function (success, fail, args) {
         var parsedArgs = {},
@@ -62,20 +80,12 @@ module.exports = {
             return;
         }
 
-        try {
-            parsedArgs.options.sourceTimezone = window.qnx.webplatform.device.timezone;
-        } catch (e) {
-            _event.trigger(parsedArgs._eventId, {
-                "result": escape(JSON.stringify({
-                    "_success": false,
-                    "code": CalendarError.UNKNOWN_ERROR
-                }))
-            });
-            success();
+        parsedArgs.options.sourceTimezone = getCurrentTimezone(parsedArgs._eventId, success);
+        if (!parsedArgs.options.sourceTimezone) {
             return;
         }
 
-        pimCalendar.find(parsedArgs);
+        pimCalendar.getInstance().find(parsedArgs);
 
         success();
     },
@@ -94,16 +104,8 @@ module.exports = {
             return;
         }
 
-        try {
-            attributes.sourceTimezone = window.qnx.webplatform.device.timezone;
-        } catch (e) {
-            _event.trigger(attributes._eventId, {
-                "result": escape(JSON.stringify({
-                    "_success": false,
-                    "code": CalendarError.UNKNOWN_ERROR
-                }))
-            });
-            success();
+        attributes.sourceTimezone = getCurrentTimezone(attributes._eventId, success);
+        if (!attributes.sourceTimezone) {
             return;
         }
 
@@ -113,7 +115,7 @@ module.exports = {
             attributes.targetTimezone = "";
         }
 
-        pimCalendar.save(attributes);
+        pimCalendar.getInstance().save(attributes);
         success();
     },
 
@@ -133,29 +135,21 @@ module.exports = {
             attributes.dateToRemove = JSON.parse(decodeURIComponent(args.dateToRemove));
         }
 
-        try {
-            attributes.sourceTimezone = window.qnx.webplatform.device.timezone;
-        } catch (e) {
-            _event.trigger(attributes._eventId, {
-                "result": escape(JSON.stringify({
-                    "_success": false,
-                    "code": CalendarError.UNKNOWN_ERROR
-                }))
-            });
-            success();
+        attributes.sourceTimezone = getCurrentTimezone(attributes._eventId, success);
+        if (!attributes.sourceTimezone) {
             return;
         }
 
-        pimCalendar.remove(attributes);
+        pimCalendar.getInstance().remove(attributes);
         success();
     },
 
     getDefaultCalendarAccount: function (success, fail, args) {
-        success(pimCalendar.getDefaultCalendarAccount());
+        success(pimCalendar.getInstance().getDefaultCalendarAccount());
     },
 
     getCalendarAccounts: function (success, fail, args) {
-        success(pimCalendar.getCalendarAccounts());
+        success(pimCalendar.getInstance().getCalendarAccounts());
     },
 
     getEvent: function (success, fail, args) {
@@ -166,8 +160,7 @@ module.exports = {
         findOptions.eventId = JSON.parse(decodeURIComponent(args.eventId));
         findOptions.accountId = JSON.parse(decodeURIComponent(args.folder)).accountId;
 
-        results = pimCalendar.getEvent(findOptions);
-        console.log(results);
+        results = pimCalendar.getInstance().getEvent(findOptions);
 
         if (results._success) {
             if (results.event) {
@@ -183,7 +176,7 @@ module.exports = {
             return;
         }
 
-        success(pimCalendar.getCalendarFolders());
+        success(pimCalendar.getInstance().getCalendarFolders());
     },
 
     getDefaultCalendarFolder: function (success, fail, args) {
@@ -192,7 +185,7 @@ module.exports = {
             return;
         }
 
-        success(pimCalendar.getDefaultCalendarFolder());
+        success(pimCalendar.getInstance().getDefaultCalendarFolder());
     }
 };
 
@@ -202,7 +195,8 @@ module.exports = {
 
 JNEXT.PimCalendar = function ()
 {
-    var self = this;
+    var self = this,
+        hasInstance = false;
 
     self.find = function (args) {
         JNEXT.invoke(self.m_id, "find " + JSON.stringify(args));
@@ -236,7 +230,6 @@ JNEXT.PimCalendar = function ()
 
     self.getCalendarFolders = function (args) {
         var result = JNEXT.invoke(self.m_id, "getCalendarFolders");
-        console.log("getCalendarFolders, result=" + result);
         return JSON.parse(result);
     };
 
@@ -264,7 +257,6 @@ JNEXT.PimCalendar = function ()
     };
 
     self.onEvent = function (strData) {
-        console.log("onEvent, strData=" + strData);
         var arData = strData.split(" "),
             strEventDesc = arData[0],
             args = {};
@@ -277,7 +269,13 @@ JNEXT.PimCalendar = function ()
 
     self.m_id = "";
 
-    self.init();
+    self.getInstance = function () {
+        if (!hasInstance) {
+            self.init();
+            hasInstance = true;
+        }
+        return self;
+    };
 };
 
 pimCalendar = new JNEXT.PimCalendar();

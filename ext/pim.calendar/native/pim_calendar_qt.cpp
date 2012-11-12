@@ -615,13 +615,24 @@ QList<QDateTime> PimCalendarQt::setEventFields(bbpim::CalendarEvent& ev, const J
         ev.setSensitivity(bbpim::Sensitivity::Type(args.get("sensitivity", bbpim::Sensitivity::Normal).asInt()));
     }
 
+    if (args.isMember("reminder") && args["reminder"].isInt()) {
+        ev.setReminder(args["reminder"].asInt());
+    }
+
+    if (args.isMember("birthday") && args["birthday"].isBool()) {
+        ev.setBirthday(args["birthday"].asBool());
+    }
+
+    if (args.isMember("url") && args["url"].isString()) {
+        ev.setUrl(args["url"].asCString());
+    }
+
     if (args.isMember("recurrence") && !args["recurrence"].isNull()) {
         Json::Value recArgs = args["recurrence"];
 
         if (recArgs["frequency"].isNull()) {
             returnObj["_success"] = false;
             returnObj["code"] = INVALID_ARGUMENT_ERROR;
-            //return returnObj;
         }
 
         bbpim::Recurrence recurrence;
@@ -649,7 +660,6 @@ QList<QDateTime> PimCalendarQt::setEventFields(bbpim::CalendarEvent& ev, const J
         if (!recurrence.isValid()) {
             returnObj["_success"] = false;
             returnObj["code"] = UNKNOWN_ERROR;
-            //return returnObj;
         }
 
         ev.setRecurrence(recurrence);
@@ -671,7 +681,6 @@ QList<QDateTime> PimCalendarQt::setEventFields(bbpim::CalendarEvent& ev, const J
             if (!attendee.isValid()) {
                 returnObj["_success"] = false;
                 returnObj["code"] = UNKNOWN_ERROR;
-                //return returnObj;
             }
 
             ev.addAttendee(attendee);

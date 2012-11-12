@@ -31,21 +31,22 @@ CalendarEvent = function (properties) {
         privateParentId,
         privateFolder;
 
-    this.allDay = properties && properties.allDay !== undefined ? properties.allDay : null;
+    this.allDay = properties && properties.allDay !== undefined ? properties.allDay : false;
     this.attendees = properties && properties.attendees !== undefined ? properties.attendees : [];
-    this.birthday = properties && properties.birthday !== undefined ? properties.birthday : null;
+    this.birthday = properties && properties.birthday !== undefined ? properties.birthday : false;
     this.description = properties && properties.description !== undefined ? properties.description : "";
     this.end = properties && properties.end !== undefined ? (properties.end instanceof Date ? properties.end : new Date(parseInt(properties.end, 10))) : null;
     this.location = properties && properties.location !== undefined ? properties.location : "";
-    this.reminder = properties && properties.reminder !== undefined ? properties.reminder : "";
+    this.reminder = properties && properties.reminder !== undefined ? properties.reminder : 15; // default reminder to 15 mins before start
     this.recurrence = properties && properties.recurrence !== undefined ? properties.recurrence : null;
     this.sensitivity = properties && properties.sensitivity !== undefined ? properties.sensitivity : null;
-    this.status = properties && properties.status !== undefined ? properties.status : "";
+    this.status = properties && properties.status !== undefined ? properties.status : 0;
     this.start = properties && properties.start !== undefined ? (properties.start instanceof Date ? properties.start : new Date(parseInt(properties.start, 10))) : null;
     this.summary = properties && properties.summary !== undefined ? properties.summary : "";
     this.timezone = properties && properties.timezone !== undefined ? properties.timezone : "";
     this.transparency = properties && properties.transparency !== undefined ? properties.transparency : 2; // default to busy if not set
     this.originalStartTime = properties && properties.originalStartTime !== undefined ? (properties.originalStartTime instanceof Date ? properties.originalStartTime : new Date(parseInt(properties.originalStartTime, 10))) : null;
+    this.url = properties && properties.url !== undefined ? properties.url : "";
 
     privateId = properties && properties.id !== undefined ? properties.id : null;
     privateParentId = properties && properties.parentId !== undefined ? properties.parentId : null;
@@ -152,9 +153,6 @@ CalendarEvent.prototype.save = function (onSaveSuccess, onSaveError) {
         var result = JSON.parse(unescape(args.result)),
             errorObj,
             newEvent;
-
-        console.log("Save result!");
-        console.log(result);
 
         if (result._success) {
             if (successCallback) {

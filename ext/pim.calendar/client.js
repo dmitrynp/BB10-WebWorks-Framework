@@ -160,7 +160,7 @@ _self.findEvents = function (findOptions, onFindSuccess, onFindError) {
                     realEvents.push(new CalendarEvent(calendarUtils.populateEvent(event)));
                 });
             }
-            console.log(events);
+
             onFindSuccess(realEvents);
         } else {
             calendarUtils.invokeErrorCallback(onFindError, result.code);
