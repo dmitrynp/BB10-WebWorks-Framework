@@ -23,9 +23,6 @@ var CalendarFolder = function (properties) {
     this.readonly = properties && properties.readonly ? properties.readonly : false;
     this.type = properties && properties.type ? properties.type : -1; // TODO
     this.visible = properties && properties.visible !== undefined ? properties.visible : true;
-    this.supportsParticipants = properties && properties.supportsParticipants !== undefined ? properties.supportsParticipants : false;
-    this.supportsInfiniteRecurrence = properties && properties.supportsInfiniteRecurrence !== undefined ? properties.supportsInfiniteRecurrence : false;
-    this.supportsMessaging = properties && properties.supportsMessaging !== undefined ? properties.supportsMessaging : false;
     this.default = properties && properties.default !== undefined ? properties.default : false;
     this.enterprise = properties && properties.enterprise !== undefined ? properties.enterprise : false;
 };

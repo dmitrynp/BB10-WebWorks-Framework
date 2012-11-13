@@ -981,9 +981,9 @@ describe("blackberry.pim.calendar", function () {
 
                 cal.findEvents({
                     "filter": {
-                        "substring": "wwt005b"
-                    },
-                    "expandRecurring": true
+                        "substring": "wwt005b",
+                        "expandRecurring": true
+                    }
                 }, successCb, errorCb);
 
                 waitsFor(function () {
@@ -998,6 +998,8 @@ describe("blackberry.pim.calendar", function () {
                         called = false;
                         // remove the Feb occurence
                         foundEvents[1].remove(removeSuccessCb, errorCb, false);
+                    } else {
+                        this.fail(new Error("Should have found 4 occurrences"));
                     }
                 });
 
@@ -1012,9 +1014,9 @@ describe("blackberry.pim.calendar", function () {
                     called = false;
                     cal.findEvents({
                         "filter": {
-                            "substring": "wwt005b"
-                        },
-                        "expandRecurring": true
+                            "substring": "wwt005b",
+                            "expandRecurring": true
+                        }
                     }, successCb, errorCb);
                 });
 
@@ -1035,6 +1037,8 @@ describe("blackberry.pim.calendar", function () {
                         foundEvents.forEach(function (evt) {
                             starts.push(evt.start.toISOString());
                         });
+                    } else {
+                        this.fail(new Error("Should have found 3 occurrences"));
                     }
 
                     expect(starts).toContain(new Date("Jan 6, 2014, 12:00").toISOString());

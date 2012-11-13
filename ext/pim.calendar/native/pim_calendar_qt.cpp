@@ -510,6 +510,8 @@ bool PimCalendarQt::getSearchParams(bbpim::EventSearchParameters& searchParams, 
         // filter - expand recurring - optional
         if (!filter["expandRecurring"].empty() && filter["expandRecurring"].isBool()) {
             searchParams.setExpand(filter["expandRecurring"].asBool());
+        } else {
+            searchParams.setExpand(false);
         }
 
         // filter - folders - optional
