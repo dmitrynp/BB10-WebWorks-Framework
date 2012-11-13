@@ -2145,6 +2145,40 @@ describe("blackberry.pim.calendar", function () {
         });
     });
 
+    describe("blackberry.pim.calendar.getEvent", function () {
+        var eventToFind = null;
+        it('can get the event with specified eventId and folder', function () {
+            var evt,
+                eventFound,
+                summary = "(wwt014) WebWorksTest: Testing getEvent",
+                location = "Somewhere",
+                start = new Date(),
+                end = new Date(start.valueOf() + 60 * 60 * 1000),
+                successCreateEvent = jasmine.createSpy().andCallFake(function (event) {
+                    eventToFind = event;
+                }),
+                errorCreateEvent = jasmine.createSpy();
+
+            evt = cal.createEvent({
+                "summary": summary,
+                "location": location,
+                "allDay": false,
+                "start": start,
+                "end": end
+            });
+            runs(function () {
+                evt.save(successCreateEvent, errorCreateEvent);
+            });
+            waitsFor(function () {
+                return eventToFind ? true : false;
+            }, "create new event was failed", timeout);
+            runs(function () {
+                eventFound = cal.getEvent(eventToFind.id, eventToFind.folder);
+                expect(eventFound.id).toBe(eventToFind.id);    
+            });
+        });
+    });
+
     describe("Clean up all test events", function () {
         it("Clean up all test events", function () {
             var called = false,

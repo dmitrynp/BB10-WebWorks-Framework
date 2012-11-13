@@ -62,7 +62,7 @@ private:
     std::map<bbpim::AccountId, bbpimAccount::Account> m_accountsMap;
     bbpimAccount::Account m_defaultAccount;
     bbpim::CalendarFolder m_defaultFolder;
-    ServiceProvider& m_provider;
+    ServiceProvider &m_provider;
 };
 
 #endif // PIM_CALENDAR_ACCT_FOLDER_MGR_HPP_

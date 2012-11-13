@@ -703,7 +703,9 @@ bbpim::CalendarService* PimCalendarQt::getCalendarService() {
 }
 
 QDateTime PimCalendarQt::getDate(const Json::Value& arg) {
-    return QDateTime::fromString(QString(arg.asCString()), "yyyy-MM-dd'T'hh:mm:ss'.000Z'");
+    QString datetime = QString(arg.asCString());
+    datetime.chop(5);
+    return QDateTime::fromString(datetime, "yyyy-MM-dd'T'hh:mm:ss");
 }
 
 std::string PimCalendarQt::getSafeString(const std::string& s) {
