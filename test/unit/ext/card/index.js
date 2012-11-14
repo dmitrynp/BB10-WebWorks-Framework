@@ -19,6 +19,9 @@ var _apiDir = __dirname + "./../../../../ext/card/",
     _extDir = __dirname + "./../../../../ext/",
     mockedCamera,
     mockedFile,
+    mockedCalPicker,
+    mockedCalComposer,
+    mockedEmailComposer,
     index,
     successCB,
     failCB;
@@ -32,6 +35,15 @@ describe("invoke.card index", function () {
         mockedFile = {
             open: jasmine.createSpy("file.open")
         };
+        mockedCalPicker = {
+            open: jasmine.createSpy("calendarPicker.open")
+        };
+        mockedCalComposer = {
+            open: jasmine.createSpy("calendarComposer.open")
+        };
+        mockedEmailComposer = {
+            open: jasmine.createSpy("emailComposer.open")
+        };
         GLOBAL.window = {};
         GLOBAL.window.qnx = {
             callExtensionMethod : function () {},
@@ -40,7 +52,14 @@ describe("invoke.card index", function () {
                     return {
                         cards: {
                             camera: mockedCamera,
-                            file: mockedFile
+                            file: mockedFile,
+                            email: {
+                                composer: mockedEmailComposer
+                            },
+                            calendar: {
+                                picker: mockedCalPicker,
+                                composer: mockedCalComposer
+                            },
                         }
                     };
                 }
@@ -54,6 +73,9 @@ describe("invoke.card index", function () {
 
     afterEach(function () {
         mockedCamera = null;
+        mockedCalPicker = null;
+        mockedCalComposer = null;
+        mockedEmailComposer = null;
         GLOBAL.window.qnx = null;
         index = null;
         successCB = null;
@@ -85,6 +107,19 @@ describe("invoke.card index", function () {
             expect(mockedCamera.open).toHaveBeenCalledWith({
                     options: {mode: "Picker"}
                 }, jasmine.any(Function), jasmine.any(Function), jasmine.any(Function));
+            expect(successCB).toHaveBeenCalled();
+        });
+    });
+    describe("invoke calendar picker", function () {
+        it("can invoke calendar picker with options", function () {
+            var successCB = jasmine.createSpy(),
+                mockedArgs = {
+                    options: encodeURIComponent(JSON.stringify({options: {filepath: "/path/to/file.vcs"}}))
+                };
+            index.invokeCalendarPicker(successCB, null, mockedArgs);
+            expect(mockedCalPicker.open).toHaveBeenCalledWith({
+                options: { filepath : "/path/to/file.vcs" }
+            }, jasmine.any(Function), jasmine.any(Function), jasmine.any(Function));
             expect(successCB).toHaveBeenCalled();
         });
     });
