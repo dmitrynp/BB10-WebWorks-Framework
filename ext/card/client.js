@@ -21,7 +21,9 @@ var _self = {},
     _cameraInvokeEventId = "invokeCamera.invokeEventId",
     _filePickerDoneEventId = "invokeFilePicker.doneEventId",
     _filePickerCancelEventId = "invokeFilePicker.cancelEventId",
-    _filePickerInvokeEventId = "invokeFilePicker.invokeEventId";
+    _filePickerInvokeEventId = "invokeFilePicker.invokeEventId",
+    _targetPickerSelectedEventId = "invokeTargetPicker.selectedEventId",
+    _targetPickerErrorEventId = "invokeTargetPicker.errorEventId";
 
 _self.invokeMediaPlayer = function (options, done, cancel, invokeCallback) {
     var doneEventId = "invokeMediaPlayer.doneEventId",
@@ -83,6 +85,32 @@ _self.invokeFilePicker = function (options, done, cancel, invokeCallback) {
         window.webworks.event.once(_ID, _filePickerInvokeEventId, invokeCallback);
     }
     return window.webworks.execAsync(_ID, "invokeFilePicker", {options: options || ""});
+};
+
+_self.invokeTargetPicker = function (request, title, onSuccess, onError) {
+
+    if (!window.webworks.event.isOn(_targetPickerSelectedEventId)) {
+        window.webworks.event.once(_ID, _targetPickerSelectedEventId, onSuccess);
+    }
+
+    if (!window.webworks.event.isOn(_targetPickerErrorEventId)) {
+        window.webworks.event.once(_ID, _targetPickerErrorEventId, onError);
+    }
+
+    try {
+        if (request.hasOwnProperty('data')) {
+            request.data = window.btoa(request.data);
+        }
+
+        window.webworks.execSync(_ID, "invokeTargetPicker", {
+            request: request,
+            title: title,
+            onSuccess: onSuccess,
+            onError : onError,
+        });
+    } catch (e) {
+        onError(e);
+    }
 };
 
 //CAMERA PROPERTIES
