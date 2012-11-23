@@ -45,6 +45,24 @@ module.exports = {
 
         window.qnx.webplatform.getApplication().cards.filePicker.open(options, done, cancel, invokeCallback);
         success();
+    },
+    invokeContactPicker: function (success, fail, args) {
+        var options = JSON.parse(decodeURIComponent(args["options"])),
+            contactPicker = require("./contactPickerJNEXT").contactPicker;
+            /*,
+            done = function (path) {
+                _event.trigger("invokeContactPicker.doneEventId", path);
+            },
+            cancel = function (reason) {
+                _event.trigger("invokeContactPicker.cancelEventId", reason);
+            },
+            error = function (error) {
+                _event.trigger("invokeContactPicker.errorEventId", error);
+            };
+*/
+        //window.qnx.webplatform.getApplication().cards.filePicker.open(options, done, cancel, invokeCallback);
+        contactPicker.getInstance().invoke(options);
+        success();
     }
 };
 

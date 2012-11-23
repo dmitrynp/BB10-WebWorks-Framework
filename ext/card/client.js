@@ -21,7 +21,10 @@ var _self = {},
     _cameraInvokeEventId = "invokeCamera.invokeEventId",
     _filePickerDoneEventId = "invokeFilePicker.doneEventId",
     _filePickerCancelEventId = "invokeFilePicker.cancelEventId",
-    _filePickerInvokeEventId = "invokeFilePicker.invokeEventId";
+    _filePickerInvokeEventId = "invokeFilePicker.invokeEventId",
+    _contactDoneEventId = "invokeContactPicker.doneEventId",
+    _contactCancelEventId = "invokeContactPicker.cancelEventId",
+    _contactErrorEvendId = "invokeContactPicker.errorEventId";
 
 _self.invokeCamera = function (mode, done, cancel, invokeCallback) {
     if (!window.webworks.event.isOn(_cameraDoneEventId)) {
@@ -63,6 +66,22 @@ _self.invokeFilePicker = function (options, done, cancel, invokeCallback) {
         window.webworks.event.once(_ID, _filePickerInvokeEventId, invokeCallback);
     }
     return window.webworks.execAsync(_ID, "invokeFilePicker", {options: options || ""});
+};
+
+_self.invokeContactPicker = function (options, done, cancel, error) {
+    if (!window.webworks.event.isOn(_contactDoneEventId)) {
+        window.webworks.event.once(_ID, _contactDoneEventId, done);
+    }
+
+    if (!window.webworks.event.isOn(_contactCancelEventId)) {
+        window.webworks.event.once(_ID, _contactCancelEventId, cancel);
+    }
+
+    if (!window.webworks.event.isOn(_contactErrorEvendId)) {
+        window.webworks.event.once(_ID, _contactErrorEvendId, error);
+    }
+
+    return window.webworks.execAsync(_ID, "invokeContactPicker", {options: options || ""});
 };
 
 //CAMERA PROPERTIES
