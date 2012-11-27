@@ -791,9 +791,11 @@ Json::Value PimCalendarQt::eventToJson(const bbpim::CalendarEvent& event)
     jsonEvent["recurrence"]["end"] = QString::number(event.recurrence().end().toUTC().toMSecsSinceEpoch()).toStdString();
     jsonEvent["recurrence"]["until"] = QString::number(event.recurrence().until().toUTC().toMSecsSinceEpoch()).toStdString();
     jsonEvent["recurrence"]["exceptionDates"] = Json::Value();
+
     for (QList<QDateTime>::const_iterator i = event.recurrence().exceptions().constBegin(); i != event.recurrence().exceptions().constEnd(); ++i) {
         jsonEvent["recurrence"]["exceptionDates"].append(QString::number(i->toUTC().toMSecsSinceEpoch()).toStdString());
     }
+
     jsonEvent["recurrence"]["frequency"] = event.recurrence().frequency();
     jsonEvent["recurrence"]["interval"] = event.recurrence().interval();
     jsonEvent["recurrence"]["numberOfOccurrences"] = event.recurrence().numberOfOccurrences();
@@ -803,6 +805,7 @@ Json::Value PimCalendarQt::eventToJson(const bbpim::CalendarEvent& event)
     jsonEvent["recurrence"]["monthInYear"] = event.recurrence().monthInYear();
 
     jsonEvent["attendees"] = Json::Value();
+
     for (QList<bbpim::Attendee>::const_iterator i = event.attendees().constBegin(); i != event.attendees().constEnd(); ++i) {
         Json::Value jsonAttendee;
         jsonAttendee["email"] = getSafeString(i->email().toStdString());
@@ -829,11 +832,13 @@ Json::Value PimCalendarQt::eventToJson(const bbpim::CalendarEvent& event)
 
     jsonEvent["bbmConference"] = Json::Value();
     jsonEvent["bbmConference"]["phoneLabels"] = Json::Value();
+
     for (QStringList::const_iterator i = event.bbmConference().phoneLabels().constBegin(); i != event.bbmConference().phoneLabels().constEnd(); ++i) {
         jsonEvent["bbmConference"]["phoneLabels"].append(i->toStdString());
     }
 
     jsonEvent["bbmConference"]["phoneNumbers"] = Json::Value();
+
     for (QStringList::const_iterator i = event.bbmConference().phoneNumbers().constBegin(); i != event.bbmConference().phoneNumbers().constEnd(); ++i) {
         jsonEvent["bbmConference"]["phoneNumbers"].append(i->toStdString());
     }
