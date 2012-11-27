@@ -188,4 +188,25 @@ describe("app client", function () {
             expect(mockedWebworks.execSync).toHaveBeenCalledWith(_ID, "rotate", {orientation: 'landscape'});
         });
     });
+
+    describe("window covers", function () {
+        it("coverSize", function () {
+            mockedWebworks.execSync = jasmine.createSpy().andReturn(1);
+            var value = client.coverSize;
+            expect(mockedWebworks.execSync).toHaveBeenCalledWith(_ID, "coverSize");
+            expect(value).toBe(1);
+        });
+        it("updateCover", function () {
+            var fakeCover = {
+                type: "file",
+                path: "/path/to/application/cover.jpg",
+                text: [{"label": "cover label", "size": 5, "color": "FFFFFF", "wrap": true}],
+                transition: "slide",
+                badges: "false"
+            };
+            mockedWebworks.execSync = jasmine.createSpy();
+            client.updateCover(fakeCover);
+            expect(mockedWebworks.execSync).toHaveBeenCalledWith(_ID, "updateCover", {cover: fakeCover});
+        });
+    });
 });

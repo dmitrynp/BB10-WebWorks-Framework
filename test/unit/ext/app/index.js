@@ -22,7 +22,9 @@ var _apiDir = __dirname + "./../../../../ext/app/",
     mockedRotate,
     mockedLockRotation,
     mockedUnlockRotation,
-    config;
+    config,
+    mockedCoverSize,
+    mockedUpdateCover;
 
 function getWebPlatformEventName(e) {
     switch (e) {
@@ -75,6 +77,8 @@ describe("app index", function () {
         mockedRotate = jasmine.createSpy();
         mockedLockRotation = jasmine.createSpy();
         mockedUnlockRotation = jasmine.createSpy();
+        mockedCoverSize = {x: 396, y: 294};
+        mockedUpdateCover = jasmine.createSpy("update cover");
         GLOBAL.window = GLOBAL;
         GLOBAL.window.qnx = {
             webplatform: {
@@ -83,7 +87,9 @@ describe("app index", function () {
                         exit: mockedExit,
                         rotate: mockedRotate,
                         lockRotation: mockedLockRotation,
-                        unlockRotation: mockedUnlockRotation
+                        unlockRotation: mockedUnlockRotation,
+                        coverSize: mockedCoverSize,
+                        updateCover: mockedUpdateCover
                     };
                 }
             }
@@ -116,6 +122,33 @@ describe("app index", function () {
                 };
             index.getReadOnlyFields(success, null, null, null);
             expect(success).toHaveBeenCalledWith(expectedReturn);
+        });
+    });
+
+    describe("window covers", function () {
+        it("coverSize", function () {
+            var success = jasmine.createSpy(),
+                fail = jasmine.createSpy();
+
+            index.coverSize(success, fail);
+            expect(fail).not.toHaveBeenCalled();
+            expect(success).toHaveBeenCalledWith({x: 396, y: 294});
+        });
+        it("updateCover", function () {
+            var success = jasmine.createSpy(),
+                fail = jasmine.createSpy(),
+                fakeCover = {
+                    type: "file",
+                    path: "/path/to/application/cover.jpg",
+                    text: [{"label": "cover label", "size": 5, "color": "FFFFFF", "wrap": true}],
+                    transition: "slide",
+                    badges: false
+                };
+
+            index.updateCover(success, fail, {cover: encodeURIComponent(JSON.stringify(fakeCover))}, null);
+            expect(success).toHaveBeenCalled();
+            expect(fail).not.toHaveBeenCalled();
+            expect(mockedUpdateCover).toHaveBeenCalledWith(fakeCover);
         });
     });
 

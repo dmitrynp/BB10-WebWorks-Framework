@@ -75,6 +75,20 @@ var _config = require("./../../lib/config"),
                 var _yPosition = JSON.parse(yPosition);
                 _event.trigger("keyboardPosition", _yPosition);
             }
+        },
+        entercover: {
+            context: _appEvents,
+            event: "windowCoverEnter",
+            trigger: function () {
+                _event.trigger("entercover");
+            }
+        },
+        exitcover: {
+            context: _appEvents,
+            event: "windowCoverExit",
+            trigger: function () {
+                _event.trigger("exitcover");
+            }
         }
     };
 
@@ -213,5 +227,19 @@ module.exports = {
 
     exit: function () {
         window.qnx.webplatform.getApplication().exit();
+    },
+
+    coverSize : function (success, fail, args, env) {
+        if (typeof args === 'undefined') {
+            success(window.qnx.webplatform.getApplication().coverSize);
+        } else {
+            window.qnx.webplatform.getApplication().coverSize = JSON.parse(decodeURIComponent(args.coverSize));
+            success();
+        }
+    },
+
+    updateCover: function (success, fail, args, env) {
+        qnx.webplatform.getApplication().updateCover(JSON.parse(decodeURIComponent(args.cover)));
+        success();
     }
 };

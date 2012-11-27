@@ -101,6 +101,28 @@ function rotate(orientation) {
     window.webworks.execSync(ID, "rotate", {orientation: orientation});
 }
 
+//Window covers
+Object.defineProperty(_self, "coverSize", {
+    get: function () {
+        return window.webworks.execSync(ID, "coverSize");
+    },
+    set: function (coverSize) {
+        window.webworks.execSync(ID, "coverSize", {"coverSize": coverSize});
+    }
+});
+
+_self.updateCover = function (cover) {
+    window.webworks.execSync(ID, "updateCover", {"cover": cover});
+};
+
+//window cover constants
+Object.defineProperty(_self, "FADE", {"value": "fade", "writable": false});
+Object.defineProperty(_self, "SLIDE", {"value": "slide", "writable": false});
+Object.defineProperty(_self, "DEFAULT", {"value": "default", "writable": false});
+Object.defineProperty(_self, "NONE", {"value": "none", "writable": false});
+Object.defineProperty(_self, "SNAPSHOT", {"value": "snapshot", "writable": false});
+Object.defineProperty(_self, "FILE", {"value": "file", "writable": false});
+
 // Orientation Properties
 Object.defineProperty(_self, "lockOrientation", {"value": lockOrientation, "writable": false});
 Object.defineProperty(_self, "unlockOrientation", {"value": unlockOrientation, "writable": false});

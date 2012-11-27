@@ -131,4 +131,34 @@ describe("blackberry.app", function () {
         testAppReadOnly("version");
     });
 
+    it('blackberry.app.coverSize should exist', function () {
+        expect(blackberry.app.coverSize).toBeDefined();
+    });
+
+    it('can set and get coverSize', function () {
+        var size = {x: "359", y: "345"};
+        blackberry.app.coverSize = size;
+        expect(blackberry.app.coverSize).toBe(size);
+    });
+
+    it('allows an application to update the window cover', function () {
+        var exThrown = false,
+            cover = {
+            "cover": {
+                "type": "snapshot",
+                "capture": { "x": 0, "y": 0, "width": 100, "height": 200 },
+                "text": [{"label": "label", "size": 3}],
+                "transition": "fade",
+                "badges": true
+            }
+        };
+        try {
+            blackberry.app.updateCover(cover);
+        } catch (exception) {
+            exThrown = true;
+        }
+        expect(exThrown).toBe(false);
+
+    });
+
 });
