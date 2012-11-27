@@ -4,6 +4,7 @@
 #include <QObject>
 #include <json/value.h>
 #include <string>
+#include <bb/cascades/pickers/ContactPicker>
 
 class ContactPicker;
 
@@ -18,12 +19,14 @@ class QObj : public QObject
 	Q_OBJECT
 
 public:
-	explicit QObj(const ContactPickerThreadInfo& info);
+	//explicit QObj(const ContactPickerThreadInfo& info);
+	explicit QObj(QObject *parent, const ContactPickerThreadInfo& info);
 	virtual ~QObj() {}
 
 public slots:
 	void process();
 	void onContactsSelected(const QList<int>& contactsSelected);
+	void onContactSelected(int contactId);
 	void onCanceled();
 	void onError();
 
@@ -32,6 +35,7 @@ signals:
 
 private:
 	ContactPickerThreadInfo m_info;
+	bb::cascades::pickers::ContactPicker* m_pPicker;
 };
 
 #endif

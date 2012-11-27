@@ -19,6 +19,7 @@
 #include <string>
 #include <QThread>
 #include <QObject>
+#include <QCoreApplication>
 #include "contactpicker_js.hpp"
 #include "qobj.hpp"
 //#include "qobj.moc"
@@ -77,15 +78,56 @@ std::string ContactPicker::InvokeMethod(const std::string& command)
     thread_info->jsonObj = obj;
     //thread_info->eventId = obj->removeMember("_eventId").asString();
 
+    //QObj* worker = new QObj(*thread_info);
+    /*
+    bb::cascades::pickers::ContactPicker* m_pPicker = new bb::cascades::pickers::ContactPicker();
+    m_pPicker->setMode(bb::cascades::pickers::ContactSelectionMode::Single);
+    m_pPicker->setKindFilters(QSet<bb::pim::contacts::AttributeKind::Type>() << bb::pim::contacts::AttributeKind::Phone);
+
+    bool connected = QObject::connect(m_pPicker, SIGNAL(contactsSelected(const QList<int> &)), worker, SLOT(onContactsSelected(const QList<int> &)));
+    fprintf(stderr, "DEBUGQOBJ selected (s) connected? %d\n", connected);
+
+    connected = QObject::connect(m_pPicker, SIGNAL(contactSelected(int)), worker, SLOT(onContactSelected(int)));
+    fprintf(stderr, "DEBUGQOBJ selected connected? %d\n", connected);
+
+    connected = QObject::connect(m_pPicker, SIGNAL(canceled()), worker, SLOT(onCanceled()));
+    fprintf(stderr, "DEBUGQOBJ canceled connected? %d\n", connected);
+
+    connected = QObject::connect(m_pPicker, SIGNAL(error()), worker, SLOT(onError()));
+    fprintf(stderr, "DEBUGQOBJ error connected? %d\n", connected);
+
+    m_pPicker->open();
+    */
+    //worker->process();
+
+    int argc = 0;
+    //char* argv[];
+    QCoreApplication a(argc, 0);
+
+    // Task parented to the application so that it
+    // will be deleted by the application.
+    //Task *task = new Task(&a);
+    QObj* worker = new QObj(&a, *thread_info);
+
+    // This will cause the application to exit when
+    // the task signals finished.    
+    //QObject::connect(worker, SIGNAL(finished()), &a, SLOT(quit()));
+
+    // This will run the task from the application event loop.
+    QTimer::singleShot(0, worker, SLOT(process()));
+
+    a.exec();
+
+/*
     QThread* thread = new QThread;
     QObj* worker = new QObj(*thread_info);
-    worker->moveToThread(thread);
     QObject::connect(thread, SIGNAL(started()), worker, SLOT(process()));
     //QObject::connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
     //QObject::connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
     //QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    worker->moveToThread(thread);
     thread->start();
-
+*/
     /*
     int index = command.find_first_of(" ");
 
