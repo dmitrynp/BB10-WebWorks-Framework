@@ -22,6 +22,7 @@ var _apiDir = __dirname + "./../../../../ext/app/",
     mockedRotate,
     mockedLockRotation,
     mockedUnlockRotation,
+    mockedWindowState,
     config;
 
 function getWebPlatformEventName(e) {
@@ -30,6 +31,8 @@ function getWebPlatformEventName(e) {
         return "inactive";
     case "resume":
         return "active";
+    case "windowstatechanged":
+        return "stateChange";
     case "orientationchange":
         return [ 'rotate', 'rotateWhenLocked' ];
     default:
@@ -75,6 +78,7 @@ describe("app index", function () {
         mockedRotate = jasmine.createSpy();
         mockedLockRotation = jasmine.createSpy();
         mockedUnlockRotation = jasmine.createSpy();
+        mockedWindowState = jasmine.createSpy("windowState");
         GLOBAL.window = GLOBAL;
         GLOBAL.window.qnx = {
             webplatform: {
@@ -83,7 +87,8 @@ describe("app index", function () {
                         exit: mockedExit,
                         rotate: mockedRotate,
                         lockRotation: mockedLockRotation,
-                        unlockRotation: mockedUnlockRotation
+                        unlockRotation: mockedUnlockRotation,
+                        windowState: mockedWindowState
                     };
                 }
             }
@@ -97,6 +102,7 @@ describe("app index", function () {
         mockedRotate = null;
         mockedLockRotation = null;
         mockedUnlockRotation = null;
+        mockedWindowState = null;
     });
 
     describe("getReadOnlyFields", function () {
@@ -210,6 +216,14 @@ describe("app index", function () {
         });
     });
 
+    describe("windowState", function () {
+        it("can call success with windowState", function () {
+            var success = jasmine.createSpy();
+            index.windowState(success, null, null, null);
+            expect(success).toHaveBeenCalledWith(mockedWindowState);
+        });
+    });  
+    
     describe("events", function () {
         beforeEach(function () {
             spyOn(events, "add");
@@ -224,6 +238,10 @@ describe("app index", function () {
             testRegisterEvent("resume");
         });
 
+        it("can register 'windowstatechanged' event", function () {
+            testRegisterEvent("windowstatechanged");
+        });
+        
         it("can register 'swipedown' event", function () {
             testRegisterEvent("swipedown");
         });
@@ -255,6 +273,10 @@ describe("app index", function () {
         it("can un-register 'resume' event", function () {
             testUnRegisterEvent("resume");
         });
+        
+        it("can un-register 'windowstatechanged' event", function () {
+            testUnRegisterEvent("windowstatechanged");
+        });        
 
         it("can un-register 'swipedown' event", function () {
             testUnRegisterEvent("swipedown");

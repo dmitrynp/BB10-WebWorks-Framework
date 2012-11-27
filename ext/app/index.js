@@ -75,6 +75,14 @@ var _config = require("./../../lib/config"),
                 var _yPosition = JSON.parse(yPosition);
                 _event.trigger("keyboardPosition", _yPosition);
             }
+        },
+        windowstatechanged: {
+            context: _appEvents,
+            event: "stateChange",
+            trigger: function (state) {
+                var _state = JSON.parse(state);
+                _event.trigger("windowstatechanged", _state);
+            }
         }
     };
 
@@ -213,5 +221,9 @@ module.exports = {
 
     exit: function () {
         window.qnx.webplatform.getApplication().exit();
+    },
+    
+    windowState : function (success, fail, args, env) {
+        success(qnx.webplatform.getApplication().windowState);
     }
 };
