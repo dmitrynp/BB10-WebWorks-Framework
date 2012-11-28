@@ -29,6 +29,7 @@ public slots:
 	void onContactSelected(int contactId);
 	void onCanceled();
 	void onError();
+	void print();
 
 signals:
 	void finished();

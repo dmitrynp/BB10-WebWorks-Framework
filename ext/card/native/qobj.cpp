@@ -9,10 +9,17 @@
 QObj::QObj(const ContactPickerThreadInfo& info) : m_info(info)
 {
 }
+
 */
 
+using namespace bb::cascades;
 QObj::QObj(QObject *parent, const ContactPickerThreadInfo& info) : QObject(parent), m_info(info)
 {
+}
+
+void QObj::print()
+{
+    fprintf(stderr, "DEBUGQOBJ I am in print!!!!%s\n", "");
 }
 
 void QObj::process()
@@ -23,19 +30,24 @@ void QObj::process()
     m_pPicker->setMode(bb::cascades::pickers::ContactSelectionMode::Single);
     m_pPicker->setKindFilters(QSet<bb::pim::contacts::AttributeKind::Type>() << bb::pim::contacts::AttributeKind::Phone);
 
-    bool connected = connect(m_pPicker, SIGNAL(contactsSelected(const QList<int> &)), SLOT(onContactsSelected(const QList<int> &)));
-    fprintf(stderr, "DEBUGQOBJ selected (s) connected? %d\n", connected);
+    //bool connected = QObject::connect(m_pPicker, SIGNAL(contactsSelected(const QList<int> &)), this, SLOT(onContactsSelected(const QList<int> &)), Qt::QueuedConnection);
+    //fprintf(stderr, "DEBUGQOBJ selected (s) connected? %d\n", connected);
 
-    connected = connect(m_pPicker, SIGNAL(contactSelected(int)), SLOT(onContactSelected(int)));
+    bool connected =  QObject::connect(m_pPicker, SIGNAL(contactSelected(int)), this, SLOT(onContactSelected(int)), Qt::QueuedConnection);
     fprintf(stderr, "DEBUGQOBJ selected connected? %d\n", connected);
 
-    connected = connect(m_pPicker, SIGNAL(canceled()), SLOT(onCanceled()));
+    connected =  QObject::connect(m_pPicker, SIGNAL(canceled()), this, SLOT(onCanceled()), Qt::QueuedConnection);
     fprintf(stderr, "DEBUGQOBJ canceled connected? %d\n", connected);
 
-    connected = connect(m_pPicker, SIGNAL(error()), SLOT(onError()));
+    connected =  QObject::connect(m_pPicker, SIGNAL(error()), this, SLOT(onError()), Qt::QueuedConnection);
+    fprintf(stderr, "DEBUGQOBJ error connected? %d\n", connected);
+
+    connected =  QObject::connect(QApplication::instance(), SIGNAL(aboutToQuit()), this, SLOT(print()), Qt::QueuedConnection);
     fprintf(stderr, "DEBUGQOBJ error connected? %d\n", connected);
 
     m_pPicker->open();
+    
+
 
 /*
     bb::cascades::pickers::ContactPicker *contactPicker = new bb::cascades::pickers::ContactPicker();
@@ -66,7 +78,8 @@ void QObj::process()
 
     // should delete m_info here
 
-   // emit finished();
+
+    //emit finished();
 }
 
 void QObj::onContactSelected(int contactId)

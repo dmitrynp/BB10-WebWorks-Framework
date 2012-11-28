@@ -20,12 +20,45 @@
 #include <QThread>
 #include <QObject>
 #include <QCoreApplication>
+#include <QEventLoop>
 #include "contactpicker_js.hpp"
 #include "qobj.hpp"
 //#include "qobj.moc"
 
+static QApplication *app = NULL;
+
+void myMessageOutput(QtMsgType type, const char *msg)
+ {
+     //in this function, you can write the message to any stream!
+     switch (type) {
+     case QtDebugMsg:
+         fprintf(stderr, "Debug: %s\n", msg);
+         break;
+     case QtWarningMsg:
+         fprintf(stderr, "Warning: %s\n", msg);
+         break;
+     case QtCriticalMsg:
+         fprintf(stderr, "Critical: %s\n", msg);
+         break;
+     case QtFatalMsg:
+         fprintf(stderr, "Fatal: %s\n", msg);
+         abort();
+     }
+ }
+
+
 ContactPicker::ContactPicker(const std::string& id) : m_id(id)
 {
+    qInstallMsgHandler(myMessageOutput);
+    int argc = 0;
+    app = new QApplication(argc, 0);
+    //QThread* thread = new QThread;
+    //EventThread* app = new EventThread();
+    //QObject::connect(thread, SIGNAL(started()), app, SLOT(process()));
+    //QObject::connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
+    //QObject::connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
+    //QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    //app->moveToThread(thread);
 }
 
 char* onGetObjList()
@@ -100,31 +133,37 @@ std::string ContactPicker::InvokeMethod(const std::string& command)
     */
     //worker->process();
 
-    int argc = 0;
+    //int argc = 0;
     //char* argv[];
-    QCoreApplication a(argc, 0);
+    //qInstallMsgHandler(myMessageOutput);
+    //QCoreApplication a(argc, 0);
 
     // Task parented to the application so that it
     // will be deleted by the application.
     //Task *task = new Task(&a);
-    QObj* worker = new QObj(&a, *thread_info);
+    QThread *thread = new QThread;
+    thread->start();
+    QObj* worker = new QObj(0, *thread_info);
+    worker->moveToThread(thread);
 
     // This will cause the application to exit when
     // the task signals finished.    
-    //QObject::connect(worker, SIGNAL(finished()), &a, SLOT(quit()));
+    QObject::connect(worker, SIGNAL(finished()), app, SLOT(quit()));
 
     // This will run the task from the application event loop.
     QTimer::singleShot(0, worker, SLOT(process()));
+    //worker->process();
+    app->exec();
 
-    a.exec();
 
 /*
+
     QThread* thread = new QThread;
     QObj* worker = new QObj(*thread_info);
     QObject::connect(thread, SIGNAL(started()), worker, SLOT(process()));
-    //QObject::connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
-    //QObject::connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
-    //QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
+    QObject::connect(worker, SIGNAL(finished()), thread, SLOT(quit()));
+    QObject::connect(worker, SIGNAL(finished()), worker, SLOT(deleteLater()));
+    QObject::connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
     worker->moveToThread(thread);
     thread->start();
 */

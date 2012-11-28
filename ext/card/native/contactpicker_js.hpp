@@ -19,7 +19,10 @@
 
 #include <json/value.h>
 #include <string>
+#include <QCoreApplication>
+#include <QThread>
 #include <plugin.h>
+#include "event_thread.hpp"
 
 #define EVENT_ID_DONE "invokeContactPicker.doneEventId"
 #define EVENT_ID_CANCEL "invokeContactPicker.cancelEventId"
@@ -36,6 +39,7 @@ public:
 
 private:
     std::string m_id;
+    EventThread m_eventThread;
 };
 
 #endif // CONTACT_PICKER_JS_HPP_
