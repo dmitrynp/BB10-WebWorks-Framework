@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-var srcPath = __dirname + '/../../../lib/';
+var srcPath = __dirname + '/../../../lib/',
+    mockedQnx,
+    mockedWebPlatform,
+    mockedApplication;
 
 describe("Utils", function () {
     var utils = require(srcPath + 'utils.js');
@@ -120,7 +123,7 @@ describe("Utils", function () {
             waitsFor(function () {
                 return seriesComplete;
             });
-           
+
             expect(callbackInvocations.length).toEqual(2);
             expect(callbackInvocations[0]).toEqual(0);
             expect(callbackInvocations[1]).toEqual('done');
@@ -139,7 +142,7 @@ describe("Utils", function () {
             waitsFor(function () {
                 return seriesComplete;
             });
-            
+
             expect(callbackInvocations.length).toEqual(5);
 
             for (i = 0; i < 4; i++) {
@@ -149,4 +152,44 @@ describe("Utils", function () {
             expect(callbackInvocations[4]).toEqual('done');
         });
     });
+
+    describe("utils translate path", function () {
+        beforeEach(function () {
+            mockedApplication = {
+                getEnv : function (path) {
+                    if (path === "HOME")
+                        return "/accounts/home";
+                }
+            };
+            mockedWebPlatform = {
+                getApplication : function () {
+                    return mockedApplication;
+                }
+            };
+            mockedQnx = {
+                webplatform : mockedWebPlatform
+            };
+            GLOBAL.window.qnx = mockedQnx;
+        });
+
+        it("Expect translate path to be defined", function () {
+            expect(utils.translatePath).toBeDefined();
+        });
+        it("translate path successfully returns the original path when passed non local value", function () {
+            var path = "http://google.com";
+            path = utils.translatePath(path);
+            expect(path).toEqual("http://google.com");
+        });
+        it("translate path successfully returns the original path when passed a telephone uri", function () {
+            var path = "tel://250-654-34243";
+            path = utils.translatePath(path);
+            expect(path).toEqual("tel://250-654-34243");
+        });
+        it("translate path successfully retuns an updated string for a local path", function () {
+            var path = "local:///this-is-a-local/img/path.jpg";
+            path = utils.translatePath(path);
+            expect(path).toEqual("file:///accounts/home/../app/native/this-is-a-local/img/path.jpg");
+        });
+    });
+
 });

@@ -198,10 +198,10 @@ describe("app client", function () {
         });
         it("updateCover", function () {
             var fakeCover = {
-                type: "file",
+                type: client.FILE,
                 path: "/path/to/application/cover.jpg",
                 text: [{"label": "cover label", "size": 5, "color": "FFFFFF", "wrap": true}],
-                transition: "slide",
+                transition: client.SLIDE,
                 badges: "false"
             };
             mockedWebworks.execSync = jasmine.createSpy();

@@ -89,7 +89,11 @@ describe("app index", function () {
                         lockRotation: mockedLockRotation,
                         unlockRotation: mockedUnlockRotation,
                         coverSize: mockedCoverSize,
-                        updateCover: mockedUpdateCover
+                        updateCover: mockedUpdateCover,
+                        getEnv: function (path) {
+                            if (path === "HOME")
+                                return "/accounts/home";
+                        }
                     };
                 }
             }

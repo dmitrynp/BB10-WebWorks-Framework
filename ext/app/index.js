@@ -17,6 +17,7 @@ var _config = require("./../../lib/config"),
     _event = require("./../../lib/event"),
     _utils = require("./../../lib/utils"),
     _appEvents = require("./../../lib/events/applicationEvents"),
+    utils = require("./../../lib/utils"),
     _orientation,
     _actionMap = {
         swipedown: {
@@ -166,6 +167,13 @@ function rotateWhenLockedTrigger(edge) {
     _event.trigger("orientationchange", edgeToOrientation(edge));
 }
 
+function processCover(cover) {
+    if (cover.type === 'file') {
+        cover.path = utils.translatePath(cover.path);
+    }
+    return cover;
+}
+
 module.exports = {
     registerEvents: function (success, fail, args, env) {
         try {
@@ -239,7 +247,8 @@ module.exports = {
     },
 
     updateCover: function (success, fail, args, env) {
-        qnx.webplatform.getApplication().updateCover(JSON.parse(decodeURIComponent(args.cover)));
+        var processedCover = processCover(JSON.parse(decodeURIComponent(args.cover)));
+        qnx.webplatform.getApplication().updateCover(processedCover);
         success();
     }
 };
