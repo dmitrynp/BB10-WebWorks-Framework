@@ -149,8 +149,7 @@ describe("server", function () {
                     action: "exec",
                     ext: "blackberry.app",
                     method: "getReadOnlyFields",
-                    args: null,
-                    origin: null
+                    args: null
                 },
                 headers: {
                     host: ""
@@ -176,14 +175,15 @@ describe("server", function () {
         });
 
         it("returns 403 if the feature is not white listed", function () {
-            var errMsg = "Feature denied by whitelist";
+            var errMsg = "Feature denied by whitelist",
+                consoleErrMsg = "Feature " + req.params.ext + " denied access by whitelist for origin " + req.origin;
 
             spyOn(Whitelist.prototype, "isFeatureAllowed").andReturn(false);
-            spyOn(console, "log");
+            spyOn(console, "error");
 
             server.handle(req, res);
 
-            expect(console.log).toHaveBeenCalledWith(errMsg + ": " + {});
+            expect(console.error).toHaveBeenCalledWith(consoleErrMsg);
             expect(res.send).toHaveBeenCalledWith(403, encodeURIComponent(JSON.stringify({code: -1, data: null, msg: errMsg})));
         });
 
