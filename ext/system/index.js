@@ -156,5 +156,14 @@ module.exports = {
         } catch (err) {
             fail(ERROR_ID, err.message);
         }
+    },
+
+    setWallpaper: function (success, fail, args) {
+        try {
+            var path = _utils.translatePath(JSON.parse(decodeURIComponent(args.wallpaper)));
+            window.qnx.webplatform.getApplication().newWallpaper(path);
+        } catch (err) {
+            fail(ERROR_ID, err.message);
+        }
     }
 };
