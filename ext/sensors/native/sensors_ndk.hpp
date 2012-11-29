@@ -28,16 +28,7 @@ class Sensors;
 
 namespace webworks {
 
-struct SensorConfig {
-    std::string sensor;
-    int delay;
-    char background;
-    char batching;
-    char queue;
-    char reducedReporting;
-};
-
-typedef std::map<std::string, std::pair<int, SensorConfig> > SensorTypeMap;
+typedef std::map<std::string, std::pair<int, Json::Value> > SensorTypeMap;
 typedef std::map<int, sensor_t*> ActiveSensorMap;
 
 class SensorsNDK {
@@ -46,7 +37,7 @@ public:
     ~SensorsNDK();
     void StartEvents();
     void StopEvents();
-    void SetSensorOptions(const SensorConfig& config);
+    void SetSensorOptions(const Json::Value& config);
     void StartSensor(const std::string& sensor);
     void StopSensor(const std::string& sensor);
     static void* SensorThread(void *args);

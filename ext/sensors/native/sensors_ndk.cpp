@@ -81,10 +81,10 @@ void SensorsNDK::StopEvents()
     }
 }
 
-void SensorsNDK::SetSensorOptions(const SensorConfig& config)
+void SensorsNDK::SetSensorOptions(const Json::Value& config)
 {
     MUTEX_LOCK();
-    const SensorTypeMap::iterator findSensor = _sensorTypeMap.find(config.sensor);
+    const SensorTypeMap::iterator findSensor = _sensorTypeMap.find(config["sensor"].asString());
     if (findSensor != _sensorTypeMap.end()) {
         findSensor->second.second = config;
     }
@@ -105,29 +105,29 @@ void SensorsNDK::StartSensor(const std::string& sensorString)
         const ActiveSensorMap::iterator findActiveSensor = m_pActiveSensors->find(sensorType);
         if (findActiveSensor == m_pActiveSensors->end()) {
             sensor_t *sensor = NULL;
-            SensorConfig *config = &findSensor->second.second;
+            Json::Value config = *(&findSensor->second.second);
             sensor = sensor_new(sensorType);
             SIGEV_PULSE_INIT(&m_sigEvent, m_coid, SIGEV_PULSE_PRIO_INHERIT, SENSOR_BASE_PULSE + sensorType, sensor);
             sensor_event_notify(sensor, &m_sigEvent);
 
-            if (config->delay != SENSOR_CONFIG_UNDEFINED) {
-                sensor_set_delay(sensor, config->delay);
+            if (config.isMember("delay")) {
+                sensor_set_delay(sensor, config["delay"].asInt());
             }
 
-            if (config->queue != SENSOR_CONFIG_UNDEFINED) {
-                sensor_set_queue(sensor, config->queue);
+            if (config.isMember("queue")) {
+                sensor_set_queue(sensor, config["queue"].asInt());
             }
 
-            if (config->batching != SENSOR_CONFIG_UNDEFINED) {
-                sensor_set_batching(sensor, config->batching);
+            if (config.isMember("batching")) {
+                sensor_set_batching(sensor, config["batching"].asInt());
             }
 
-            if (config->background != SENSOR_CONFIG_UNDEFINED) {
-                sensor_set_background(sensor, config->background);
+            if (config.isMember("background")) {
+                sensor_set_background(sensor, config["background"].asInt());
             }
 
-            if (config->reducedReporting != SENSOR_CONFIG_UNDEFINED) {
-                sensor_set_reduced_reporting(sensor, config->reducedReporting);
+            if (config.isMember("reducedReporting")) {
+                sensor_set_reduced_reporting(sensor, config["reducedReporting"].asInt());
             }
 
             m_pActiveSensors->insert(std::make_pair(sensorType, sensor));
@@ -308,7 +308,7 @@ void SensorsNDK::stopActiveSensor(sensor_type_e sensorType)
 
 void SensorsNDK::createSensorMap()
 {
-    SensorConfig config;
+    Json::Value config;
     _sensorTypeMap["deviceaccelerometer"] = std::make_pair(SENSOR_TYPE_ACCELEROMETER, config);
     _sensorTypeMap["devicemagnetometer"] = std::make_pair(SENSOR_TYPE_MAGNETOMETER, config);
     _sensorTypeMap["devicegyroscope"] = std::make_pair(SENSOR_TYPE_GYROSCOPE, config);
