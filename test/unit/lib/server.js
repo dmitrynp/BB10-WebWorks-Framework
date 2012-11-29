@@ -83,13 +83,16 @@ describe("server", function () {
 
             server.handle(req, res, webview);
 
-            expect(plugin[DEFAULT_ACTION]).toHaveBeenCalledWith(rebuiltRequest, jasmine.any(Function),
-                                                                jasmine.any(Function), rebuiltRequest.params.args,
-                                                                {
-                                                                    request: rebuiltRequest,
-                                                                    response: res,
-                                                                    webview: webview
-                                                                });
+            expect(plugin[DEFAULT_ACTION]).toHaveBeenCalledWith(
+                rebuiltRequest, jasmine.any(Function),
+                jasmine.any(Function),
+                rebuiltRequest.params.args,
+                {
+                    request: rebuiltRequest,
+                    response: res,
+                    webview: webview
+                }
+            );
         });
 
         it("returns 404 if the action doesn't exist", function () {
