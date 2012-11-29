@@ -20,9 +20,9 @@ var _self = {},
 _self.setOptions = function (sensor, options) {
     var args = { "options" : options };
     args.options.sensor = sensor;
-    return window.webworks.execAsync(_ID, "setOptions", args);
+    return window.webworks.execSync(_ID, "setOptions", args);
 };
 
-window.webworks.execAsync(_ID, "registerEvents", null);
+window.webworks.execSync(_ID, "registerEvents", null);
 
 module.exports = _self;

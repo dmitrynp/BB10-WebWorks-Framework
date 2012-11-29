@@ -19,7 +19,6 @@ var _extDir = __dirname + "./../../../../ext",
     client,
     mockedWebworks = {
         execSync: jasmine.createSpy(),
-        execAsync: jasmine.createSpy()
     };
 
 
@@ -38,7 +37,7 @@ describe("sensors", function () {
     describe("setOptions", function () {
         it("calls execAsync", function () {
             client.setOptions("devicecompass", { delay : 1000 });
-            expect(mockedWebworks.execAsync).toHaveBeenCalledWith(_ID, "setOptions", { options : { delay : 1000, sensor : "devicecompass" } });
+            expect(mockedWebworks.execSync).toHaveBeenCalledWith(_ID, "setOptions", { options : { delay : 1000, sensor : "devicecompass" } });
         });
     });
 });
