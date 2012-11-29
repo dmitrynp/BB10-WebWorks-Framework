@@ -77,7 +77,7 @@ describe("NetworkResourceRequested event handler", function () {
                 send: jasmine.any(Function)
             };
         expect(JSON.parse(returnValue).setAction).toEqual("SUBSTITUTE");
-        expect(server.handle).toHaveBeenCalledWith(expectedRequest, expectedResponse, mockedWebview.id);
+        expect(server.handle).toHaveBeenCalledWith(expectedRequest, expectedResponse, mockedWebview);
     });
 
     it("can call the server handler correctly with a multi-level method", function () {
@@ -100,7 +100,7 @@ describe("NetworkResourceRequested event handler", function () {
                 send: jasmine.any(Function)
             };
         expect(JSON.parse(returnValue).setAction).toEqual("SUBSTITUTE");
-        expect(server.handle).toHaveBeenCalledWith(expectedRequest, expectedResponse, mockedWebview.id);
+        expect(server.handle).toHaveBeenCalledWith(expectedRequest, expectedResponse, mockedWebview);
     });
 
 });

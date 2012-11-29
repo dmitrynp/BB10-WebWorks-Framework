@@ -65,23 +65,31 @@ describe("server", function () {
 
         it("calls the default plugin if the service doesn't exist", function () {
             var rebuiltRequest = {
-                params: {
-                    service: DEFAULT_SERVICE,
-                    action: DEFAULT_ACTION,
-                    ext: "not",
-                    method: "here",
-                    args: null
+                    params: {
+                        service: DEFAULT_SERVICE,
+                        action: DEFAULT_ACTION,
+                        ext: "not",
+                        method: "here",
+                        args: null
+                    },
+                    body: "",
+                    origin: ""
                 },
-                body: "",
-                origin: ""
-            };
+                webview = {};
+
             spyOn(plugin, DEFAULT_ACTION);
             req.params.service = "not";
             req.params.action = "here";
 
-            server.handle(req, res);
+            server.handle(req, res, webview);
 
-            expect(plugin[DEFAULT_ACTION]).toHaveBeenCalledWith(rebuiltRequest, jasmine.any(Function), jasmine.any(Function), null, jasmine.any(Object));
+            expect(plugin[DEFAULT_ACTION]).toHaveBeenCalledWith(rebuiltRequest, jasmine.any(Function),
+                                                                jasmine.any(Function), rebuiltRequest.params.args,
+                                                                {
+                                                                    request: rebuiltRequest,
+                                                                    response: res,
+                                                                    webview: webview
+                                                                });
         });
 
         it("returns 404 if the action doesn't exist", function () {
@@ -96,15 +104,18 @@ describe("server", function () {
         });
 
         it("calls the action method on the plugin", function () {
+            var webview = "BLAHBLAHBLAH";
+
             spyOn(extensionPlugin, "get");
 
             req.params.service = "extensions";
             req.params.action = "get";
 
             expect(function () {
-                return server.handle(req, res);
+                return server.handle(req, res, webview);
             }).not.toThrow();
-            expect(extensionPlugin.get).toHaveBeenCalled();
+            expect(extensionPlugin.get).toHaveBeenCalledWith(req, jasmine.any(Function), jasmine.any(Function),
+                                                             req.params.args, {request: req, response: res, webview: webview});
         });
 
         it("returns the result and code 1 when success callback called", function () {
