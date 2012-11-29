@@ -47,12 +47,13 @@ describe("sensors index", function () {
                 expect(success).toHaveBeenCalled();
             });
 
-            it("can call call with invalid parameters", function () {
+            it("can call with invalid parameters", function () {
                 var fail = jasmine.createSpy(),
-                    args = {};
+                    options = { "sensor" : "devicecompass", "delay" : "10000", background : false },
+                    args = { options : JSON.stringify(options) };
 
                 index.setOptions(null, fail, args, null);
-                expect(fail).toHaveBeenCalledWith(-1, "Need to specify arguments");
+                expect(fail).toHaveBeenCalled(); 
             });
         });
     });

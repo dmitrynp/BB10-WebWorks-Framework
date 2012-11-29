@@ -120,9 +120,16 @@ module.exports = {
         if (args.options) {
             args.options = JSON.parse(decodeURIComponent(args.options));
 
-            if (args.options.sensor === "") {
+            if (!args.options.sensor || args.options.sensor === "") {
                 fail(-1, "Must specify a sensor");
+                return;
             }
+
+            if (args.options.delay && typeof(args.options.delay) !== "number") {
+                fail(-1, "Delay must be a number");
+                return;
+            }
+
             success(sensors.getInstance().setOptions(args.options));
         } else {
             fail(-1, "Need to specify arguments");
